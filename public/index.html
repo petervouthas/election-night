@@ -1,0 +1,1754 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Election Night 2026</title>
+<style>
+:root {
+  --bg: #070a0f; --panel: #0c1117; --panel2: #111820; --line: #1a2230; --line2: #263244;
+  --ink: #dde4ed; --ink2: #93a1b3; --ink3: #5a6a7e;
+  --dem: #3d8bff; --dem-lead: #245aa8; --dem-dim: #17315c;
+  --rep: #ff4d4d; --rep-lead: #a83232; --rep-dim: #5a1f1f;
+  --oth: #a78bfa;
+  --over: #2bd576; --under: #ffae1a;
+  --none: #1c2532;
+  --mono: ui-monospace, "SF Mono", Menlo, "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 12px/1.35 var(--mono); font-size: calc(12px * var(--ui)); height: 100%; }
+body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+:root { --ui: 1; --left-w: 60%; --races-h: 440px; --polls-h: 150px; --side-w: 500px; }
+a { color: var(--ink2); text-decoration: none; }
+button { font: inherit; color: var(--ink2); background: var(--panel2); border: 1px solid var(--line2); padding: 3px 9px; cursor: pointer; border-radius: 2px; }
+button:hover { color: var(--ink); border-color: var(--ink3); }
+button.on { color: var(--ink); background: var(--line2); border-color: var(--ink3); }
+button:focus-visible, [contenteditable]:focus-visible { outline: 1px solid var(--ink2); outline-offset: 1px; }
+.num { font-variant-numeric: tabular-nums; }
+.d { color: var(--dem); } .r { color: var(--rep); } .o { color: var(--oth); }
+.over { color: var(--over); } .under { color: var(--under); }
+.muted { color: var(--ink3); } .dim { color: var(--ink2); }
+
+/* header */
+#hdr { display: flex; align-items: center; gap: 18px; height: calc(30px * var(--ui)); padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--panel); flex: none; white-space: nowrap; overflow: hidden; }
+#hdr > * { flex: none; }
+#hdr .title { color: var(--ink); letter-spacing: .04em; }
+#hdr #nextclose { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#hdr .clock { font-size: calc(15px * var(--ui)); color: var(--ink); }
+#hdr .spacer { flex: 1; }
+#hdr .tabs { display: flex; border: 1px solid var(--line2); border-radius: 3px; overflow: hidden; background: var(--panel2); }
+#hdr .tabs::before { content: attr(data-label); color: var(--ink3); font-size: calc(10px * var(--ui)); padding: 0 7px; display: flex; align-items: center; background: var(--panel); border-right: 1px solid var(--line2); }
+#hdr .tabs button { border: 0; border-right: 1px solid var(--line); border-radius: 0; background: transparent; padding: 2px 8px; }
+#hdr .tabs button:last-child { border-right: 0; }
+#hdr .src { display: flex; gap: 14px; color: var(--ink3); flex: 0 1 auto; min-width: 0; overflow: hidden; }
+#hdr .src > span { white-space: nowrap; }
+#hdr .src b { color: var(--ink2); font-weight: 500; }
+#hdr .src .stale { color: var(--under); }
+#hdr .src .dead { color: var(--rep); }
+#live { width: 7px; height: 7px; border-radius: 50%; background: var(--over); display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+@media (prefers-reduced-motion: reduce) { #live { animation: none } }
+
+/* top bar */
+#top { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); flex: none; }
+#gb { display: none; }
+/* the national "US" row: a regular row, pinned under the header */
+tr.national td { position: sticky; top: calc(24px * var(--ui)); z-index: 1; background: var(--panel); border-bottom: 1px solid var(--line2); }
+tr.national td.race { color: var(--ink); }
+tr:hover.national td { background: var(--panel2); }
+.chamber { padding: 6px 14px 6px; border-right: 1px solid var(--line); display: grid; grid-template-columns: auto auto 1fr; grid-template-rows: auto auto; column-gap: 18px; align-items: end; }
+.chamber .kp { display: flex; flex-direction: column; gap: 1px; padding-bottom: 4px; color: var(--ink2); font-size: calc(12px * var(--ui)); }
+.chamber .lbl .chip { margin-left: 10px; font-size: calc(11px * var(--ui)); letter-spacing: 0; padding: 0 5px; border: 1px solid var(--line2); border-radius: 2px; }
+.chamber .lbl .chip small { color: var(--ink3); margin-left: 3px; }
+.chamber .lbl .chip.flat { color: var(--ink3); }
+.chamber .kp b { font-weight: 500; }
+.chamber:last-child { border-right: 0; }
+.chamber .lbl { grid-column: 1 / -1; color: var(--ink2); letter-spacing: .08em; font-size: calc(11px * var(--ui)); display: flex; gap: 14px; align-items: baseline; }
+.chamber .lbl .fav { color: var(--ink); }
+.big { font-size: calc(46px * var(--ui)); line-height: 1; font-weight: 500; letter-spacing: -.02em; }
+.big small { font-size: calc(18px * var(--ui)); color: var(--ink3); font-weight: 400; margin-left: 1px; }
+.odds { display: flex; flex-direction: column; }
+.odds .cap { color: var(--ink3); font-size: calc(11px * var(--ui)); margin-top: 4px; }
+.odds .cap b { color: var(--ink2); font-weight: 500; }
+.spread { display: flex; flex-direction: column; align-self: end; padding-bottom: 4px; }
+.spread .v { font-size: calc(22px * var(--ui)); color: var(--ink); }
+.spread .cap { color: var(--ink3); font-size: calc(11px * var(--ui)); }
+.spark { align-self: end; justify-self: end; }
+.spark svg { display: block; }
+.seats { grid-column: 1 / -1; margin-top: 8px; display: flex; align-items: center; gap: 12px; color: var(--ink2); }
+.seats .bar { flex: 1 1 160px; min-width: 120px; height: 8px; background: var(--none); position: relative; display: flex; overflow: hidden; }
+.seats > .muted { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seats .bar span { height: 100%; display: block; }
+.seats .bar .maj { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--ink); }
+.seats .cnt { white-space: nowrap; }
+.seats .cnt b { font-weight: 500; font-size: calc(14px * var(--ui)); }
+
+.gb { padding: 8px 14px; display: grid; grid-template-columns: auto 1fr; column-gap: 16px; row-gap: 3px; align-content: start; }
+.gb .lbl { grid-column: 1 / -1; color: var(--ink2); letter-spacing: .08em; font-size: calc(11px * var(--ui)); }
+.gb .k { color: var(--ink3); white-space: nowrap; }
+.gb .v { color: var(--ink); text-align: right; white-space: nowrap; }
+.gb .v.big2 { font-size: calc(26px * var(--ui)); line-height: 1; }
+.gb .v small { color: var(--ink3); font-size: calc(11px * var(--ui)); margin-left: 6px; }
+
+/* main */
+/* locked: header + odds bar. scrolling: each column region scrolls on its own. */
+#main { display: grid; grid-template-columns: minmax(240px, var(--left-w)) 6px minmax(240px, 1fr); flex: 1; min-height: 0; }
+#left { display: grid; grid-template-rows: minmax(80px, var(--races-h)) 6px minmax(80px, 1fr); min-width: 0; min-height: 0; order: 0; }
+#right { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; order: 2; }
+#rz-cols { order: 1; }
+
+/* drag handles */
+.rz { background: var(--line); position: relative; z-index: 2; touch-action: none; user-select: none; }
+.rz::after { content: ""; position: absolute; inset: 0; margin: auto; background: var(--line2); border-radius: 2px; }
+.rz-v { cursor: col-resize; width: 6px; }
+.rz-v::after { width: 2px; height: 28px; }
+.rz-h { cursor: row-resize; height: 6px; }
+.rz-h::after { height: 2px; width: 28px; }
+.rz:hover, .rz.active { background: var(--line2); }
+.rz:hover::after, .rz.active::after { background: var(--ink2); }
+body.resizing { cursor: inherit; user-select: none; }
+body.resizing iframe { pointer-events: none; }
+
+/* theater: stream fills the height, key figures in one strip under it, compact table in a narrow sidebar */
+body.theater #top { display: none; }
+body.theater #main { grid-template-columns: minmax(240px, 1fr) 6px minmax(120px, var(--side-w)); }
+body.theater #right { order: 0; overflow: hidden; }
+body.theater #left { order: 2; grid-template-rows: minmax(0, 1fr) auto auto auto; }
+body.theater #left #links { border-top: 1px solid var(--line); border-bottom: 0; }
+body.theater #rz-races, body.theater #views, body.theater #rz-polls, body.theater #log, body.theater #loghdr { display: none; }
+body.theater #left #pollshdr { border-top: 1px solid var(--line); }
+body.theater #left #polls { height: auto; flex: 1; min-height: 120px; max-height: 40vh; }
+/* phones: an app layout. Fixed header, one page at a time (Game / Odds / Races / Map / Feed), bottom tab bar. */
+#mnav { display: none; }
+@media (max-width: 900px) {
+  html, body { height: 100%; overflow: hidden; }
+  body.phone { height: 100dvh; display: flex; flex-direction: column; }
+  body.phone #hdr { gap: 10px; padding: 0 12px; height: calc(34px * var(--ui)); }
+  body.phone #hdr .src, body.phone #hdr #nextclose, body.phone #hdr #theater, body.phone #hdr #fullscreen, body.phone #hdr #resetlayout, body.phone #hdr #savesetup, body.phone #hdr #uictl, body.phone #hdr #gamebtn { display: none; }
+  body.phone #hdr .title { font-size: calc(11px * var(--ui)); }
+  body.phone #mnav { display: flex; flex: none; border-top: 1px solid var(--line2); background: var(--panel); padding-bottom: env(safe-area-inset-bottom); }
+  body.phone #mnav button { flex: 1; border: 0; border-radius: 0; background: transparent; color: var(--ink3); padding: 10px 0 9px; font-size: calc(12px * var(--ui)); letter-spacing: .04em; min-height: 46px; }
+  body.phone #mnav button + button { border-left: 1px solid var(--line); }
+  body.phone #mnav button.on { color: var(--ink); background: var(--line); box-shadow: inset 0 2px 0 var(--dem); }
+  /* pages */
+  body.phone #top, body.phone #main, body.phone #gamewrap, body.phone #racewrap, body.phone #rz-races, body.phone #views, body.phone #embedhdr, body.phone #embed, body.phone #keyfigs, body.phone #links, body.phone #pollshdr, body.phone #polls, body.phone #rz-polls, body.phone #loghdr, body.phone #log, body.phone #rz-cols { display: none; }
+  body.phone #main { flex: 1; min-height: 0; flex-direction: column; }
+  body.phone #left, body.phone #right { display: contents; }
+  body.phone[data-mpage="odds"] #top { display: block; flex: none; overflow: visible; }
+  body.phone[data-mpage="odds"] #main { display: flex; overflow: auto; }
+  body.phone[data-mpage="odds"] #links { display: flex; flex-wrap: wrap; }
+  body.phone[data-mpage="odds"] #loghdr { display: flex; }
+  body.phone[data-mpage="odds"] #log { display: block; flex: none; max-height: 30vh; }
+  body.phone[data-mpage="races"] #main { display: flex; }
+  body.phone[data-mpage="races"] #racewrap { display: flex; flex: 1; min-height: 0; }
+  body.phone[data-mpage="map"] #main { display: flex; }
+  body.phone[data-mpage="map"] #views { display: flex; flex: 1; min-height: 0; }
+  body.phone[data-mpage="feed"] #main { display: flex; }
+  body.phone[data-mpage="feed"] #pollshdr { display: flex; }
+  body.phone[data-mpage="feed"] #polls { display: block; flex: 1; min-height: 0; height: auto; overflow: auto; }
+  body.phone[data-mpage="game"] #gamewrap { display: flex; position: static; flex: 1; min-height: 0; }
+  body.phone #gamehdr #gameclose { display: none; }
+  body.phone #gamewrap #game { padding: 8px; }
+  /* odds page */
+  body.phone #top { grid-template-columns: minmax(0, 1fr); }
+  body.phone .chamber { border-right: 0; border-bottom: 1px solid var(--line); grid-template-columns: minmax(0, auto) minmax(0, auto) minmax(0, 1fr); column-gap: 12px; padding: 8px 12px; min-width: 0; overflow: hidden; }
+  body.phone .chamber .odds, body.phone .chamber .spread { min-width: 0; }
+  body.phone .chamber .spark { grid-column: 1 / -1; justify-self: start; margin-top: 4px; }
+  body.phone .big { font-size: calc(38px * var(--ui)); }
+  body.phone .big small { font-size: calc(14px * var(--ui)); }
+  body.phone .seats > .muted { white-space: normal; }
+  body.phone #links { padding: 8px 12px; gap: 8px; }
+  /* panel headers scroll sideways instead of wrapping or shrinking */
+  body.phone .ph { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  body.phone .ph::-webkit-scrollbar { display: none; }
+  body.phone #racewrap > .ph { flex-wrap: nowrap; }
+  body.phone .ph .tabs button { padding: 6px 10px; min-height: 36px; }
+  body.phone .ph button { min-height: 36px; }
+  body.phone .ph.ctl { min-height: 0; padding: 4px 8px; }
+  body.phone .ph.ctl .row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  body.phone .ph.ctl .row::-webkit-scrollbar { display: none; }
+  body.phone .ph .tabs.ghost { display: none; }      /* hidden instead of invisible: no dead space on a small screen */
+  body.phone #racemeta, body.phone #racewrap > .ph > .muted { display: none; }
+  /* race table: scrolls both ways, race id column stays put */
+  body.phone #races { overflow: auto; -webkit-overflow-scrolling: touch; }
+  body.phone td, body.phone th { padding: 6px 8px; height: calc(34px * var(--ui)); }
+  body.phone th:first-child, body.phone td.race { position: sticky; left: 0; z-index: 2; background: var(--bg); }
+  body.phone th:first-child { z-index: 3; }
+  body.phone tr.national td.race { z-index: 3; }
+  body.phone tr.national td { background: var(--panel); }
+  body.phone tr:hover td { background: inherit; }
+  /* views */
+  body.phone #viewbody { padding: 8px; }
+  body.phone #map svg, body.phone #hex svg { touch-action: none; }
+  body.phone .legend { white-space: normal; }
+  body.phone #tape { display: none !important; }
+  body.phone #toast { max-width: calc(100vw - 24px); }
+  body.phone #colpick { max-width: calc(100vw - 16px); }
+}
+body.theater #embed { aspect-ratio: auto; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+body.theater #embed iframe { position: static; }
+body.theater td, body.theater th { padding-left: 5px; padding-right: 5px; }
+body.theater #keyfigs { display: grid; }
+#keyfigs { display: none; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+#keyfigs .cell { padding: 6px 12px; border-right: 1px solid var(--line); display: grid; grid-template-columns: auto auto auto 1fr; column-gap: 14px; align-items: end; }
+#keyfigs .cell:last-child { border-right: 0; }
+#keyfigs .lab { grid-column: 1 / -1; color: var(--ink2); letter-spacing: .08em; font-size: calc(11px * var(--ui)); }
+#keyfigs .lab b { color: var(--ink); font-weight: 500; }
+#keyfigs .n { font-size: calc(38px * var(--ui)); line-height: 1; font-weight: 500; letter-spacing: -.02em; }
+#keyfigs .n small { font-size: calc(12px * var(--ui)); color: var(--ink3); font-weight: 400; margin-left: 2px; }
+#keyfigs .sub { color: var(--ink3); font-size: calc(11px * var(--ui)); padding-bottom: 4px; }
+#keyfigs .seats { grid-column: 1 / -1; margin-top: 6px; font-size: calc(11px * var(--ui)); }
+#keyfigs .gbv { font-size: calc(30px * var(--ui)); }
+body.theater .ph .muted { display: none; }
+body.theater #racemeta { display: none; }
+.ph { display: flex; align-items: center; gap: 10px; padding: 5px 10px; border-bottom: 1px solid var(--line); color: var(--ink2); letter-spacing: .06em; font-size: calc(11px * var(--ui)); background: var(--panel); flex: none; }
+.ph .spacer { flex: 1; }
+/* segmented control groups: a small label, then joined buttons, so each group reads as one unit */
+.ph .tabs { display: flex; gap: 0; flex-wrap: nowrap; flex: none; border: 1px solid var(--line2); border-radius: 3px; overflow: hidden; background: var(--panel2); }
+.ph .tabs::before { content: attr(data-label); color: var(--ink3); font-size: calc(10px * var(--ui)); letter-spacing: .06em; padding: 0 7px; display: flex; align-items: center; background: var(--panel); border-right: 1px solid var(--line2); }
+.ph .tabs:not([data-label])::before { display: none; }
+.ph .tabs button { white-space: nowrap; padding: 2px 8px; border: 0; border-right: 1px solid var(--line); border-radius: 0; background: transparent; }
+.ph .tabs button:last-child { border-right: 0; }
+.ph .tabs button.on { background: var(--line2); }
+.ph .tabs.ghost { visibility: hidden; }          /* keeps its width, so the row never reflows */
+.ph.ctl .row { gap: 14px; }
+/* column header: drag to reorder, picker popover */
+th .hl { cursor: grab; }
+th.dragging { opacity: .4; }
+th.over-l { box-shadow: inset 2px 0 0 var(--ink); }
+th.over-r { box-shadow: inset -2px 0 0 var(--ink); }
+#colpick { display: none; position: fixed; z-index: 20; background: var(--panel2); border: 1px solid var(--line2); padding: 8px 10px; min-width: 170px; letter-spacing: 0; white-space: normal; }
+#colswrap { position: relative; flex: none; }
+#colpick label { display: block; padding: 2px 0; color: var(--ink); cursor: pointer; white-space: nowrap; }
+#colpick input { margin: 0 6px 0 0; vertical-align: -1px; }
+#colpick .cp-title { color: var(--ink2); margin-bottom: 4px; }
+#colpick .cp-foot { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 6px; }
+#views, #racewrap { min-width: 0; }
+#left { overflow: hidden; }
+/* two fixed rows of controls, so switching modes never changes the header height */
+.ph.ctl { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 4px 10px; min-height: 58px; }
+.ph.ctl .row { display: flex; align-items: center; gap: 10px 14px; min-height: 22px; flex-wrap: wrap; white-space: nowrap; }
+/* the two mode sub-filters share one slot sized to the wider of them, so switching modes never reflows */
+.ph .slot { display: grid; flex: none; }
+.ph .slot > .tabs { grid-area: 1 / 1; align-self: start; justify-self: start; }
+#viewmeta { display: none; }
+.ph .slot > .tabs.ghost { visibility: hidden; }
+.ph.ctl #viewmeta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.theater .ph.ctl { display: none; }
+.legend { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 18px; flex-wrap: nowrap; }
+
+/* race table: scrolls inside its region, header stays */
+#racewrap { display: flex; flex-direction: column; min-height: 0; }
+#racewrap > .ph { white-space: nowrap; flex-wrap: wrap; row-gap: 4px; }
+#racewrap > .ph > .muted { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#racewrap > .ph > .tabs, #racewrap > .ph > span:last-child { flex: none; }
+#races { flex: 1; min-height: 0; overflow: auto; }
+table { border-collapse: collapse; width: 100%; }
+th { text-align: right; color: var(--ink3); font-weight: 400; padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; font-size: calc(11px * var(--ui)); position: sticky; top: 0; background: var(--bg); }
+th:first-child, th.l, td.l { text-align: left; }
+th[data-k] { cursor: pointer; user-select: none; }
+th[data-k]:hover { color: var(--ink2); }
+th.sorted { color: var(--ink); }
+th.sorted::before { content: "▲ "; font-size: calc(8px * var(--ui)); color: var(--ink2); }
+th.sorted.desc::before { content: "▼ "; }
+table.fixed { table-layout: fixed; }
+table.fixed td { overflow: hidden; text-overflow: ellipsis; }
+.cr { position: absolute; right: -5px; top: 0; bottom: 0; width: 10px; cursor: col-resize; z-index: 1; -webkit-user-drag: none; user-select: none; }
+.cr::after { content: ""; position: absolute; left: 4px; top: 25%; bottom: 25%; width: 1px; background: var(--line2); }
+.cr:hover::after, .cr.active::after { background: var(--ink2); width: 2px; }
+body.theater #rz-polls { display: none; }
+td { padding: 3px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; height: calc(25px * var(--ui)); }
+tr:hover td { background: var(--panel2); }
+td.race { font-weight: 500; color: var(--ink); }
+td.race a.rid { color: var(--ink); cursor: pointer; }
+td.race a.rid:hover { text-decoration: underline; }
+td.sig { color: var(--ink2); overflow: hidden; text-overflow: ellipsis; max-width: 230px; }
+td.edit { cursor: text; position: relative; }
+td.edit[data-override="1"]::after { content: ""; position: absolute; right: 2px; top: 50%; margin-top: -2px; width: 4px; height: 4px; border-radius: 50%; background: var(--ink2); }
+td.edit:hover { background: var(--line) !important; }
+td .cands { color: var(--ink3); font-size: calc(11px * var(--ui)); }
+.call { display: inline-block; width: 8px; height: 8px; border-radius: 1px; vertical-align: -1px; margin-right: 6px; background: var(--none); }
+.call.D { background: var(--dem); } .call.R { background: var(--rep); } .call.O { background: var(--oth); }
+.call.lD { background: var(--dem-lead); } .call.lR { background: var(--rep-lead); } .call.lO { background: #6b56b8; } .call.RO { background: #8a6d1f; }
+.rpt { color: var(--ink3); }
+
+/* predictions game: full-page panel over the dashboard on desktop, its own page on phones */
+#gamewrap { display: none; position: fixed; left: 0; right: 0; bottom: 0; top: calc(30px * var(--ui)); z-index: 40; background: var(--bg); flex-direction: column; }
+body.gameopen #gamewrap { display: flex; }
+#gamewrap #game { flex: 1; min-height: 0; overflow: auto; padding: 10px; }
+#gamehdr .title { color: var(--ink); letter-spacing: .08em; }
+#gamebtn.on { color: var(--ink); background: var(--line2); border-color: var(--ink3); }
+/* state tile grid (cartogram view for Senate/Governor, game Senate map) */
+svg.tiles .tile text { fill: var(--ink); pointer-events: none; font-family: var(--mono); }
+svg.tiles .tile text.sub { fill: var(--ink); opacity: .85; }
+svg.tiles .tile.none text { fill: var(--ink3); }
+svg.tiles .tile.none rect { fill: var(--none); }
+svg.tiles .tile rect { stroke: var(--bg); stroke-width: 1; }
+svg.tiles .tile.has { cursor: pointer; }
+svg.tiles .tile.has:hover rect { stroke: var(--ink); stroke-width: 1.5; }
+/* views */
+#views { min-height: 0; display: flex; flex-direction: column; }
+#viewbody { flex: 1; min-height: 0; overflow: auto; padding: 10px; position: relative; }
+.strip { margin-bottom: 14px; }
+.strip .cap { display: flex; gap: 14px; color: var(--ink2); margin-bottom: 6px; align-items: baseline; white-space: nowrap; overflow: hidden; }
+.strip .cap > span { overflow: hidden; text-overflow: ellipsis; }
+.strip .cap b { color: var(--ink); font-weight: 500; font-size: calc(14px * var(--ui)); }
+.strip svg { display: block; width: 100%; height: auto; }
+.legend { display: flex; gap: 14px; color: var(--ink3); margin-top: 6px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; vertical-align: -1px; }
+#viewbody.fill { overflow: hidden; display: flex; flex-direction: column; }
+#viewbody.fill > div { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#map svg, #hex svg { width: 100%; height: 100%; flex: 1; min-height: 0; display: block; cursor: grab; }
+#map svg:active, #hex svg:active { cursor: grabbing; }
+#map .legend, #hex .legend { flex: none; }
+#map path, #hex path { stroke: var(--bg); stroke-width: .7; }
+#map path.d, #hex path.d { stroke-width: .35; }
+#map path:hover, #hex path:hover { stroke: var(--ink); stroke-width: 1.2; }
+#map path.outline, #hex path.outline { fill: none; stroke: var(--ink2); stroke-width: 1; pointer-events: none; }
+#map path.outline:hover, #hex path.outline:hover { stroke-width: 1; }
+#tip { position: fixed; pointer-events: none; background: var(--panel2); border: 1px solid var(--line2); padding: 6px 9px; font-size: calc(11px * var(--ui)); color: var(--ink); display: none; z-index: 10; max-width: 340px; white-space: nowrap; }
+#tip .t { color: var(--ink); margin-bottom: 3px; } #tip .m { color: var(--ink2); }
+
+/* right column */
+#embed { flex: none; background: #000; aspect-ratio: 16 / 9; position: relative; }
+#embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+#links { display: flex; gap: 6px; padding: 7px 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+#links a { border: 1px solid var(--line2); padding: 3px 10px; border-radius: 2px; color: var(--ink2); background: var(--panel2); }
+#links a:hover { color: var(--ink); border-color: var(--ink3); }
+#polls { padding: 4px 10px; color: var(--ink2); font-size: calc(11px * var(--ui)); height: var(--polls-h); overflow: auto; flex: none; }
+#pollshdr { white-space: nowrap; }
+#pollshdr #feedmeta { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ph button { white-space: nowrap; }
+/* event feed */
+#polls .ev { display: grid; grid-template-columns: 44px 10px 1fr auto; gap: 8px; align-items: baseline; padding: 2px 0; border-bottom: 1px solid var(--line); }
+#polls .ev .t { color: var(--ink3); }
+#polls .ev .sq { width: 8px; height: 8px; border-radius: 1px; background: var(--none); align-self: center; }
+#polls .ev .sq.D { background: var(--dem); } #polls .ev .sq.R { background: var(--rep); } #polls .ev .sq.O { background: var(--oth); }
+#polls .ev .x { color: var(--ink); }
+#polls .ev .x .tag { font-size: calc(10px * var(--ui)); padding: 0 4px; border: 1px solid var(--line2); border-radius: 2px; margin-left: 6px; color: var(--ink2); }
+#polls .ev .x .tag.flip { color: var(--under); border-color: var(--under); }
+#polls .ev.control .x { font-size: calc(13px * var(--ui)); font-weight: 500; }
+#polls .ev a { color: var(--ink2); cursor: pointer; }
+#polls .ev a:hover { color: var(--ink); text-decoration: underline; }
+#polls .ev.new .x { animation: evin 1.2s ease-out; }
+@keyframes evin { 0% { background: var(--line2); } 100% { background: transparent; } }
+/* table row flash on an event */
+tr.flash-d td { animation: flashd 2s ease-out; box-shadow: inset 2px 0 0 var(--dem); }
+tr.flash-r td { animation: flashr 2s ease-out; box-shadow: inset 2px 0 0 var(--rep); }
+@keyframes flashd { 0% { background: rgba(61,139,255,.28); } 100% { background: transparent; } }
+@keyframes flashr { 0% { background: rgba(255,77,77,.28); } 100% { background: transparent; } }
+/* ticker tape */
+#tape { display: none; position: fixed; left: 0; right: 0; bottom: 0; height: calc(24px * var(--ui)); background: var(--panel); border-top: 1px solid var(--line2); overflow: hidden; z-index: 50; white-space: nowrap; }
+body.has-tape #main { margin-bottom: calc(24px * var(--ui)); }
+#tape .track { display: inline-block; padding-left: 100%; animation: tape 60s linear infinite; line-height: calc(24px * var(--ui)); }
+#tape:hover .track { animation-play-state: paused; }
+#tape .it { margin-right: 36px; cursor: pointer; }
+#tape .it .t { color: var(--ink3); margin-right: 6px; }
+#tape .it.D { color: var(--dem); } #tape .it.R { color: var(--rep); } #tape .it.over { color: var(--over); } #tape .it.under { color: var(--under); } #tape .it.control { color: var(--ink); font-weight: 500; }
+#tape .it.hd { color: var(--ink3); letter-spacing: .08em; margin-right: 18px; cursor: default; }
+#tape .it.tick { margin-right: 22px; }
+@keyframes tape { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) { #tape .track { animation: none; padding-left: 10px; } }
+/* catch-up toast */
+#toast { display: none; position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--panel2); border: 1px solid var(--line2); padding: 10px 14px; max-width: 560px; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,.5); }
+#toast .h { color: var(--ink2); margin-bottom: 4px; }
+#toast .l { color: var(--ink); }
+#embed { flex: none; }
+#links, .ph { flex: none; }
+#polls table td, #polls table th { padding: 2px 6px; height: auto; border-bottom: 0; font-size: calc(11px * var(--ui)); }
+#log { flex: 1; min-height: 60px; overflow: auto; padding: 6px 10px; color: var(--ink2); font-size: calc(11px * var(--ui)); }
+#log .e { display: flex; gap: 10px; padding: 1px 0; }
+#log .e .t { color: var(--ink3); flex: none; } #log .e .s { color: var(--under); flex: none; width: 70px; }
+#log .empty { color: var(--ink3); }
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <span class="title">ELECTION NIGHT · NOV 3 2026</span>
+  <span class="clock num" id="clock">--:--:-- ET</span>
+  <span class="dim" id="nextclose"></span>
+  <span class="spacer"></span>
+  <span class="src" id="src"></span>
+  <span class="tabs" data-label="text" id="uictl"><button data-ui="-" title="Smaller text">A−</button><button data-ui="0" title="Reset text size">A</button><button data-ui="+" title="Larger text (for a TV)">A+</button></span>
+  <button id="savesetup" title="Save this layout, columns, text size and views under a name; load it anywhere with ?setup=name">Save setup</button>
+  <button id="resetlayout" title="Reset panel sizes and column widths">Reset layout</button>
+  <button id="gamebtn" title="Predictions game: leaderboard and your entry (G)">Game</button>
+  <button id="theater" title="Stream large, key figures in the sidebar (T)">Theater</button>
+  <button id="fullscreen" title="Browser full screen (F). Esc leaves.">Full screen</button>
+  <span><i id="live"></i><span class="dim">LIVE</span></span>
+</div>
+
+<div id="top">
+  <div class="chamber" id="ch-house"></div>
+  <div class="chamber" id="ch-senate"></div>
+  <div class="gb" id="gb"></div>
+</div>
+
+<div id="main">
+  <div id="left">
+    <div id="racewrap">
+    <div class="ph"><span class="tabs" data-label="races" id="datasets"><button data-d="bell" class="on">Bellwethers</button><button data-d="senatekey">Senate key</button><button data-d="housekey">House key</button><button data-d="senateall">Senate all</button><button data-d="houseall">House all</button><button data-d="home" title="Each guest's home House district plus their state's Senate and Governor races (from the zip they entered when joining the game)">Hometowns</button></span><span class="muted" title="Margins are D − R. Over = live − 2024 presidential margin. Click a header to sort, drag a header to reorder, drag its edge to resize. Click a race id for details. Click a '24 or Live cell to type an override; clear it to go back to the feed.">D − R · over = live − '24</span><span class="spacer"></span><span class="muted" id="racemeta"></span><span id="colswrap"><button id="colsbtn" title="Choose and order columns">Columns</button><div id="colpick"></div></span></div>
+    <div id="races"><table><thead id="racehead"></thead><tbody id="racebody"></tbody></table></div>
+    </div>
+    <div class="rz rz-h" id="rz-races" title="Drag to resize · double-click to reset"></div>
+    <div id="views">
+      <div class="ph ctl">
+        <div class="row">
+          <span class="tabs" data-label="view" id="viewtabs"><button data-v="seats" class="on">Seats</button><button data-v="map">Map</button><button data-v="hex">Cartogram</button><button data-v="watch">Watch</button><button data-v="movers">Movers</button></span>
+          <span class="tabs ghost" data-label="layer" id="maplayers"><button data-l="senate" class="on">Senate</button><button data-l="governor">Governor</button><button data-l="house">House net</button><button data-l="districts">Districts</button></span>
+          <span class="tabs ghost" data-label="zoom" id="zoomctl"><button data-z="in" title="Zoom in (scroll wheel also works)">+</button><button data-z="out" title="Zoom out">−</button><button data-z="fit" title="Fit the whole country">Fit</button></span>
+          <span class="muted" id="viewmeta"></span>
+        </div>
+        <div class="row">
+          <span class="tabs ghost" data-label="color by" id="mapmodes"><button data-m="live" class="on">Live</button><button data-m="markets">Markets</button><button data-m="polls">Polls</button><button data-m="diff">Live − polls</button><button data-m="ratings">Ratings</button><button data-m="spend">Spending</button></span>
+          <span class="slot"><span class="tabs ghost" data-label="dollars" id="spendctl"><button data-s="all" class="on">Total</button><button data-s="D">D</button><button data-s="R">R</button><button data-s="share">Share</button></span><span class="tabs ghost" data-label="source" id="marketctl"><button data-src="avg" class="on">Avg</button><button data-src="k">Kalshi</button><button data-src="p">Poly</button></span></span>
+        </div>
+      </div>
+      <div id="viewbody"><div id="seats"></div><div id="map" style="display:none"></div><div id="hex" style="display:none"></div><div id="watch" style="display:none"></div><div id="movers" style="display:none"></div></div>
+    </div>
+  </div>
+  <div class="rz rz-v" id="rz-cols" title="Drag to resize · double-click to reset"></div>
+  <div id="right">
+    <div class="ph" id="embedhdr"><span class="tabs" data-label="stream" id="embedtabs"><button data-e="twitch" class="on">Twitch · hasanabi</button><button data-e="abc">ABC News Live</button></span><span class="spacer"></span><button id="reload" title="Reload stream">↻</button></div>
+    <div id="embed"></div>
+    <div id="keyfigs"></div>
+    <div id="links"></div>
+    <div class="ph" id="pollshdr"><span class="tabs" data-label="feed" id="feedfilters"><button data-f="all" class="on">All</button><button data-f="call">Calls</button><button data-f="flip">Flips</button><button data-f="lead">Leads</button><button data-f="bell">Bellwethers</button><button data-f="odds">Odds</button></span><span class="spacer"></span><span class="muted" id="feedmeta"></span><button id="soundbtn" title="Chime on calls, flips, control and bellwether crossings (needs one click on the page first)">🔔 off</button><button id="tapebtn" title="Ticker along the bottom: every market that moved on the last tick, then the latest events">Ticker</button></div>
+    <div id="polls"><div class="empty muted">Waiting for the first call. Calls, flips, lead changes, bellwether crossings and big odds moves land here.</div></div>
+    <div class="rz rz-h" id="rz-polls" title="Drag to resize · double-click to reset"></div>
+    <div class="ph" id="loghdr">LOG <span class="spacer"></span><button id="refresh">Force refresh</button></div>
+    <div id="log"><div class="empty">no errors</div></div>
+  </div>
+</div>
+<div id="gamewrap">
+  <div class="ph" id="gamehdr"><span class="title">PREDICTIONS GAME</span><span class="muted" id="gamemeta"></span><span class="spacer"></span><button id="gamejoin" title="Join or edit your entry">Join / edit entry</button><button id="gameclose" title="Back to the dashboard (Esc)">Close</button></div>
+  <div id="game"></div>
+</div>
+<nav id="mnav"><button data-p="game">Game</button><button data-p="odds">Odds</button><button data-p="races">Races</button><button data-p="map">Map</button><button data-p="feed">Feed</button></nav>
+<div id="tip"></div>
+<div id="tape"><div class="track" id="tapetrack"></div></div>
+<div id="toast"></div>
+
+<link rel="stylesheet" href="/modal.css">
+<link rel="stylesheet" href="/watch.css">
+<link rel="stylesheet" href="/movers.css">
+<link rel="stylesheet" href="/game.css">
+<link rel="stylesheet" href="/onboard.css">
+<script src="/vendor/d3.v7.min.js"></script>
+<script src="/vendor/topojson-client.min.js"></script>
+<script src="/tiles.js"></script>
+<script>
+'use strict';
+// ------------------------------------------------------------ helpers
+const $ = s => document.querySelector(s);
+const NAT_2024 = -1.48;   // 2024 national popular vote margin, D minus R (Trump +1.48)
+const fmtPct = v => v === null || v === undefined || isNaN(v) ? '—' : (Math.round(v * 10) / 10).toFixed(1);
+const fmtMargin = v => {
+  if (v === null || v === undefined || isNaN(v)) return '<span class="muted">—</span>';
+  const a = Math.abs(v).toFixed(1);
+  if (Math.abs(v) < 0.05) return '<span class="dim">EVEN</span>';
+  return v > 0 ? `<span class="d">D+${a}</span>` : `<span class="r">R+${a}</span>`;
+};
+const fmtOver = v => {
+  if (v === null || v === undefined || isNaN(v)) return '<span class="muted">—</span>';
+  const s = (v > 0 ? '+' : '') + v.toFixed(1);
+  if (Math.abs(v) < 0.05) return `<span class="dim">0.0</span>`;
+  return v > 0 ? `<span class="over">${s}</span>` : `<span class="under">${s}</span>`;
+};
+const ago = t => { if (!t) return '—'; const s = Math.max(0, Math.round((Date.now() - t) / 1000)); return s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s / 60)}m${String(s % 60).padStart(2, '0')}` : `${Math.floor(s / 3600)}h${Math.floor(s % 3600 / 60)}m`; };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const STATE_FIPS = { AL:'01',AK:'02',AZ:'04',AR:'05',CA:'06',CO:'08',CT:'09',DE:'10',DC:'11',FL:'12',GA:'13',HI:'15',ID:'16',IL:'17',IN:'18',IA:'19',KS:'20',KY:'21',LA:'22',ME:'23',MD:'24',MA:'25',MI:'26',MN:'27',MS:'28',MO:'29',MT:'30',NE:'31',NV:'32',NH:'33',NJ:'34',NM:'35',NY:'36',NC:'37',ND:'38',OH:'39',OK:'40',OR:'41',PA:'42',RI:'44',SC:'45',SD:'46',TN:'47',TX:'48',UT:'49',VT:'50',VA:'51',WA:'53',WV:'54',WI:'55',WY:'56' };
+const FIPS_STATE = Object.fromEntries(Object.entries(STATE_FIPS).map(([k, v]) => [v, k]));
+
+// local overrides for editable cells
+const store = {
+  get(k) { try { const v = localStorage.getItem('en26:' + k); return v === null ? null : JSON.parse(v); } catch { return null; } },
+  set(k, v) { try { if (v === null) localStorage.removeItem('en26:' + k); else localStorage.setItem('en26:' + k, JSON.stringify(v)); } catch {} },
+};
+
+let S = null;       // /api/state
+let SEATS = null;   // /api/seats
+let SPEND = null;   // /api/spending (FEC, static over the night)
+const fmtUSD = v => v === null || v === undefined ? '—' : v >= 1e9 ? '$' + (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? '$' + (v / 1e6).toFixed(1) + 'M' : '$' + Math.round(v / 1e3) + 'K';
+const Q = new URLSearchParams(location.search);   // ?view=map&layer=senate&mode=polls for deep links
+let view = Q.get('view') || store.get('view') || 'seats';
+const openGameAtStart = view === 'game'; if (view === 'game') view = 'seats';
+let mapLayer = Q.get('layer') || store.get('mapLayer') || 'senate';
+let mapMode = Q.get('mode') || store.get('mapMode') || 'live';
+let spendFilter = Q.get('spend') || store.get('spendFilter') || 'all';   // all | D | R | share
+let marketSrc = Q.get('src') || store.get('marketSrc') || 'avg';         // avg | k | p
+const zoomState = { map: d3.zoomIdentity, hex: d3.zoomIdentity };
+let clientErrors = [];
+
+// ------------------------------------------------------------ clock
+function tickClock() {
+  const now = new Date();
+  $('#clock').textContent = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false }) + ' ET';
+  if (S && S.nyt.pollClosing && S.nyt.pollClosing.length) {
+    const upcoming = S.nyt.pollClosing.map(p => ({ st: p.state, t: Date.parse(p.t) })).filter(p => p.t > now).sort((a, b) => a.t - b.t);
+    if (upcoming.length) {
+      const t0 = upcoming[0].t, sts = upcoming.filter(p => p.t === t0).map(p => p.st);
+      const secs = Math.round((t0 - now) / 1000), hh = Math.floor(secs / 3600), mm = Math.floor(secs % 3600 / 60), ss = secs % 60;
+      $('#nextclose').textContent = `next close ${hh ? hh + ':' : ''}${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')} · ${sts.slice(0, 8).join(' ')}${sts.length > 8 ? ' +' + (sts.length - 8) : ''}`;
+    } else $('#nextclose').textContent = 'all polls closed';
+  }
+  if (S) renderSources();
+}
+setInterval(tickClock, 1000);
+
+// ------------------------------------------------------------ data
+async function pullState() {
+  try {
+    const r = await fetch('/api/state', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    S = await r.json();
+    renderAll();
+  } catch (e) { clientError('page', '/api/state: ' + e.message); }
+}
+let HOUSE_BY_ID = {};   // "NY-17" -> condensed NYT race
+let HOMES = null;        // guests' hometowns from /api/homes (for the Hometowns dataset)
+async function pullHomes() {
+  try { const r = await fetch('/api/homes', { cache: 'no-store' }); if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(); const changed = JSON.stringify(j.players) !== JSON.stringify(HOMES); HOMES = j.players || []; if (changed && S && dataset === 'home') renderRaces(); }
+  catch (e) { if (Date.now() - (pullHomes.err || 0) > 60000) { pullHomes.err = Date.now(); clientError('page', '/api/homes: ' + e.message); } }
+}
+setInterval(pullHomes, 30000); pullHomes();
+async function pullSeats() {
+  try {
+    const r = await fetch('/api/seats', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    SEATS = await r.json();
+    HOUSE_BY_ID = {};
+    for (const x of SEATS.house || []) if (x.seat) HOUSE_BY_ID[`${x.state}-${parseInt(x.seat, 10) || x.seat}`] = x;
+    renderView();
+  } catch (e) { clientError('page', '/api/seats: ' + e.message); }
+}
+async function pullSpending() {
+  try {
+    const r = await fetch('/api/spending', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    SPEND = await r.json();
+    if (SPEND && view === 'map') renderMap();
+    if (SPEND && S) renderRaces();
+  } catch (e) { clientError('page', '/api/spending: ' + e.message); }
+}
+function clientError(source, msg) { clientErrors.unshift({ t: Date.now(), source, msg }); clientErrors = clientErrors.slice(0, 20); renderLog(); }
+
+// ------------------------------------------------------------ render: header sources
+function renderSources() {
+  const k = S.kalshi.updatedAt, p = S.polymarket.updatedAt, n = S.nyt.updatedAt, v = S.polls && S.polls.updatedAt;
+  const cls = (t, limit) => !t ? 'dead' : (Date.now() - t > limit ? 'stale' : '');
+  const mk = (name, t, limit) => `<span class="${cls(t, limit)}"><b>${name}</b> ${ago(t)}</span>`;
+  const mi = S.config.pollIntervalMs || 30000, ni = S.config.nytIntervalMs || 60000;
+  $('#src').innerHTML = mk('KALSHI', k, mi * 3) + mk('POLY', p, mi * 3) + mk('NYT/AP', n, ni * 3) + mk('POLLS', v, 3600e3 * 2)
+    + (S.nyt.resultsUpdatedAt ? `<span><b>feed</b> ${ago(Date.parse(S.nyt.resultsUpdatedAt))}</span>` : '');
+}
+
+// ------------------------------------------------------------ render: top bar
+// sparkline of the market average (K and P averaged per point; one source if the other is missing)
+// diverging odds chart: market average minus 50. Democratic edge fills blue above the midline,
+// Republican edge fills red below; the midline is even odds. Symmetric scale, at least ±10 pts.
+function sparkline(key1, key2, w = 170, h = 40) {
+  const H = S.history || [];
+  const pts = H.map(x => ({ t: x.t, v: (x[key1] !== null && x[key2] !== null) ? (x[key1] + x[key2]) / 2 : (x[key1] ?? x[key2]) })).filter(p => p.v !== null && p.v !== undefined).map(p => ({ t: p.t, v: p.v - 50 }));
+  if (pts.length < 2) return `<svg width="${w}" height="${h}"></svg>`;
+  const amp = Math.max(10, ...pts.map(p => Math.abs(p.v))) * 1.05;
+  const top = 3, bot = h - 12, mid = (top + bot) / 2;
+  const t0 = pts[0].t, t1 = Math.max(pts[pts.length - 1].t, t0 + 1);
+  const x = t => 14 + (t - t0) / (t1 - t0) * (w - 18), y = v => mid - v / amp * (bot - top) / 2;
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join('');
+  const area = `${line}L${x(pts[pts.length - 1].t).toFixed(1)},${mid.toFixed(1)}L${x(pts[0].t).toFixed(1)},${mid.toFixed(1)}Z`;
+  const last = pts[pts.length - 1], cid = 'clip' + key1 + Math.round(Math.random() * 1e6);
+  return `<svg width="${w}" height="${h}" role="img" aria-label="market average vs even odds, last ${(S.config.historyHours || 2)} hours">
+    <defs><clipPath id="${cid}a"><rect x="0" y="0" width="${w}" height="${mid}"/></clipPath><clipPath id="${cid}b"><rect x="0" y="${mid}" width="${w}" height="${h - mid}"/></clipPath></defs>
+    <path d="${area}" fill="var(--dem)" fill-opacity=".35" clip-path="url(#${cid}a)"/>
+    <path d="${area}" fill="var(--rep)" fill-opacity=".35" clip-path="url(#${cid}b)"/>
+    <path d="${line}" fill="none" stroke="var(--dem)" stroke-width="1.6" clip-path="url(#${cid}a)"/>
+    <path d="${line}" fill="none" stroke="var(--rep)" stroke-width="1.6" clip-path="url(#${cid}b)"/>
+    <line x1="14" y1="${mid}" x2="${w - 2}" y2="${mid}" stroke="var(--ink2)" stroke-width="1"/>
+    <text x="1" y="${top + 8}" fill="var(--dem)" font-size="9">D</text><text x="1" y="${bot}" fill="var(--rep)" font-size="9">R</text>
+    <text x="1" y="${mid + 3}" fill="var(--ink3)" font-size="8">50</text>
+    <circle cx="${x(last.t).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="2" fill="${last.v >= 0 ? 'var(--dem)' : 'var(--rep)'}"/>
+    <text x="14" y="${h - 1}" fill="var(--ink3)" font-size="9">odds vs even · last ${(S.config.historyHours || 2)}h · ±${amp.toFixed(0)} pts</text>
+  </svg>`;
+}
+
+function renderChamber(id, name, key, hKeys) {
+  const k = S.kalshi.control[key], p = S.polymarket.control[key], n = S.nyt.control && S.nyt.control[key];
+  const kD = k ? k.pD : null, pD = p ? p.pD : null;
+  const ref = kD ?? pD;
+  const favD = ref === null ? true : ref >= 50;
+  const show = v => v === null || v === undefined ? '—' : (favD ? v : 100 - v).toFixed(1);
+  const cls = favD ? 'd' : 'r';
+  const spread = (kD !== null && pD !== null) ? Math.abs(kD - pD) : null;
+  const avg = (kD !== null && pD !== null) ? (kD + pD) / 2 : (kD ?? pD);
+  const seats = n ? seatBar(key, n) : '';
+  const vol = (k && k.volume ? k.volume : 0) + (p && p.volume ? p.volume : 0);
+  // tick-to-tick and 30-minute change of the market average (D probability), shown in the favored party's frame
+  const avgAt = x => (x[hKeys[0]] !== null && x[hKeys[1]] !== null) ? (x[hKeys[0]] + x[hKeys[1]]) / 2 : (x[hKeys[0]] ?? x[hKeys[1]]);
+  const H = (S.history || []).filter(x => avgAt(x) !== null && avgAt(x) !== undefined);
+  const dTick = H.length >= 2 ? avgAt(H[H.length - 1]) - avgAt(H[H.length - 2]) : null;
+  const base30 = H.find(x => x.t >= Date.now() - 30 * 60e3);
+  const d30 = base30 && H.length >= 2 && H[H.length - 1].t - base30.t >= 5 * 60e3 ? avgAt(H[H.length - 1]) - avgAt(base30) : null;
+  const chip = (d, lab) => d === null ? '' : `<span class="chip ${Math.abs(d) < 0.05 ? 'flat' : d > 0 ? 'd' : 'r'}" title="change in Democratic probability ${lab}">${Math.abs(d) < 0.05 ? '▬' : d > 0 ? '▲' : '▼'}${Math.abs(d).toFixed(1)}<small>${lab}</small></span>`;
+  $('#' + id).innerHTML = `
+    <div class="lbl">${name} <span class="fav">${favD ? 'DEM' : 'GOP'} control</span>${chip(dTick, 'tick')}${chip(d30, '30m')}</div>
+    <div class="odds"><div class="big num ${cls}">${show(avg)}<small>%</small></div><div class="cap">avg of markets ${vol ? `<b>$${(vol / 1e6).toFixed(0)}M</b>` : ''}</div></div>
+    <div class="kp"><span class="num">K <b class="${cls}">${show(kD)}</b></span><span class="num">P <b class="${cls}">${show(pD)}</b></span><span class="muted num">spread ${spread === null ? '—' : spread.toFixed(1)}</span></div>
+    <div class="spark">${sparkline(hKeys[0], hKeys[1], 260, 46)}</div>
+    ${seats}`;
+}
+
+// One seat bar for both chambers, same segments in the same order everywhere:
+// not up (dim) · called (full) · leading (mid) · uncalled · leading R · called R · not up R.
+// Big numbers are seats held after tonight = not up + called. Same caption for both chambers.
+function seatBar(key, n) {
+  const total = n.total || (key === 'house' ? 435 : 100), toWin = n.toWin || (key === 'house' ? 218 : 51);
+  const nD = n.notUpD || 0, nR = n.notUpR || 0, nO = n.notUpO || 0;
+  // called and leading counts come from the same race list when it exists, so segments never overlap mid-refresh
+  const list = SEATS ? (key === 'house' ? SEATS.house : SEATS.senate) || [] : null;
+  let cD, cR, cO;
+  if (list && list.length) { cD = list.filter(r => r.winnerParty === 'D').length; cR = list.filter(r => r.winnerParty === 'R').length; cO = list.filter(r => r.winnerParty === 'O').length; }
+  else { cD = Math.max(0, (n.seatsD || 0) - nD); cR = Math.max(0, (n.seatsR || 0) - nR); cO = Math.max(0, (n.seatsO || 0) - nO); }
+  const lead = leadingCounts(key);
+  const open = total - nD - nR - nO - cD - cR - cO;
+  const toWinText = key === 'senate' ? 'D 51 · R 50 to win' : `${toWin} to win`;
+  const w = v => `width:${v / total * 100}%`;
+  return `<div class="seats">
+    <span class="cnt"><b class="d num">${nD + cD}</b> <span class="muted">D</span></span>
+    <div class="bar"><span style="${w(nD)};background:var(--dem-dim)"></span><span style="${w(cD)};background:var(--dem)"></span><span style="${w(lead.D)};background:var(--dem-lead)"></span><span style="${w(nO + cO)};background:var(--oth)"></span><span style="flex:1"></span><span style="${w(lead.R)};background:var(--rep-lead)"></span><span style="${w(cR)};background:var(--rep)"></span><span style="${w(nR)};background:var(--rep-dim)"></span><i class="maj" style="left:${toWin / total * 100}%"></i></div>
+    <span class="cnt"><span class="muted">R</span> <b class="r num">${nR + cR}</b></span>
+    <span class="muted" title="${nD + nR + nO} seats not up this year · called D/R · leading D/R · uncalled · needed for control">${nD + nR + nO} not up · <span class="d">${cD}</span>/<span class="r">${cR}</span> called · <span class="d">${lead.D}</span>/<span class="r">${lead.R}</span> lead · ${open} open · ${toWinText}${n.winner ? ` · <b class="${n.winner === 'D' ? 'd' : 'r'}">${n.winner} CONTROL</b>` : ''}</span>
+  </div>`;
+}
+// uncalled races where someone leads on the count, from the full chamber list
+function leadingCounts(key) {
+  const out = { D: 0, R: 0 };
+  const list = SEATS ? (key === 'house' ? SEATS.house : SEATS.senate) || [] : [];
+  for (const r of list) { const c = classify(r); if (c === 'lD') out.D++; else if (c === 'lR') out.R++; }
+  return out;
+}
+
+// generic ballot projection: uniform swing from bellwethers.
+// Each race's swing (live − 2024) is weighted by its EXPECTED vote × share counted, not by raw
+// votes counted, so the county that dumps its mail ballots first doesn't dominate. The result is
+// shrunk toward the polling average until a meaningful share of the bellwether vote is in.
+function projection() {
+  let wsum = 0, swsum = 0, n = 0, expAll = 0, rows = [];
+  for (const r of S.config.races) {
+    const live = liveMarginFor(r), m24 = margin2024For(r), nyt = S.nyt.races[r.id];
+    const exp = nyt && nyt.expectedVotes ? nyt.expectedVotes : 0; expAll += exp;
+    if (live === null || m24 === null) continue;
+    const frac = nyt && nyt.eevp ? Math.min(1, nyt.eevp / 100) : (nyt && nyt.totalVotes ? 0.05 : 0);
+    if (!frac) continue;
+    const w = Math.max(1, exp * frac);
+    wsum += w; swsum += (live - m24) * w; n++; rows.push({ id: r.id, swing: live - m24, w, eevp: nyt ? nyt.eevp : null });
+  }
+  if (!n) return { proj: null, swing: null, n: 0, rows, conf: 0 };
+  const swing = swsum / wsum;
+  const conf = expAll ? Math.min(1, wsum / expAll) : 0.5;     // share of all bellwether vote counted, 0..1
+  const polls = S.polls && S.polls.genericBallot && S.polls.genericBallot.margin !== null ? S.polls.genericBallot.margin : null;
+  const raw = NAT_2024 + swing;
+  const proj = polls === null ? raw : conf * raw + (1 - conf) * polls;
+  return { proj, raw, swing, n, rows, conf };
+}
+
+function renderGB() {
+  const P = projection();
+  const polls = S.polls && S.polls.genericBallot, ta = S.polls && S.polls.trumpApproval;
+  const pm = polls && polls.margin !== null && polls.margin !== undefined ? polls.margin : null;
+  const diff = (P.proj !== null && pm !== null) ? P.proj - pm : null;
+  $('#gb').innerHTML = `
+    <div class="lbl">GENERIC BALLOT</div>
+    <span class="k">from bellwethers</span><span class="v big2 num">${P.proj === null ? '<span class="muted">—</span>' : fmtMargin(P.proj)}</span>
+    <span class="k">swing vs '24 pres</span><span class="v num">${P.swing === null ? '<span class="muted">waiting for votes</span>' : fmtOver(P.swing) + `<small>${P.n} race${P.n === 1 ? '' : 's'} · ${Math.round(P.conf * 100)}% of vote in</small>`}</span>
+    <span class="k">polling avg</span><span class="v num">${pm === null ? '<span class="muted">—</span>' : fmtMargin(pm) + `<small>${polls.n} polls · ${polls.windowDays}d</small>`}</span>
+    <span class="k">bellwethers − polls</span><span class="v num">${diff === null ? '<span class="muted">—</span>' : fmtOver(diff)}</span>
+    <span class="k">2024 pres, national</span><span class="v num">${fmtMargin(NAT_2024)}</span>
+    <span class="k">Trump net approval</span><span class="v num">${ta && ta.net !== null && ta.net !== undefined ? `<span class="${ta.net < 0 ? 'r' : 'd'}">${ta.net > 0 ? '+' : ''}${ta.net.toFixed(1)}</span><small>${ta.approve}/${ta.disapprove}</small>` : '<span class="muted">—</span>'}</span>`;
+}
+
+// ------------------------------------------------------------ render: race table
+function margin2024For(r) {
+  const o = store.get(`edit:${r.id}:m24`); if (o !== null) return o;
+  if (r.margin2024 !== null && r.margin2024 !== undefined) return r.margin2024;
+  const n = r.nytRace || S.nyt.races[r.id]; return n && n.margin2024 !== null && n.margin2024 !== undefined ? n.margin2024 : null;
+}
+function liveMarginFor(r) {
+  const o = store.get(`edit:${r.id}:live`); if (o !== null) return o;
+  const n = r.nytRace || S.nyt.races[r.id]; return n && n.liveMargin !== null && n.liveMargin !== undefined ? n.liveMargin : null;
+}
+// the national row: generic ballot treated as one race called "US"
+function nationalRow() {
+  const nat = S.nyt.national ? Object.assign({}, S.nyt.national) : null;
+  if (nat && (nat.margin2024 === null || nat.margin2024 === undefined)) nat.margin2024 = NAT_2024;
+  const P = projection(), ta = S.polls && S.polls.trumpApproval;
+  const sig = `Generic ballot · bellwether proj ${P.proj === null ? '—' : fmtM(P.proj)}${P.n ? ` (${P.n} races, ${Math.round(P.conf * 100)}% in)` : ''}${ta && ta.net !== null && ta.net !== undefined ? ` · Trump net ${ta.net > 0 ? '+' : ''}${ta.net.toFixed(1)}` : ''}`;
+  return { id: 'US', office: 'national', state: 'US', signal: sig, pollCloseET: '', margin2024: null, nytRace: nat || { candidates: [], totalVotes: 0, margin2024: NAT_2024, eevp: null },
+    k: S.kalshi.control.house, p: S.polymarket.control.house, hasK: true, hasP: true, rating: null, national: true };
+}
+function spendFor(r) {
+  if (!SPEND) return null;
+  if (r.office === 'national') return SPEND.national ? SPEND.national.H : null;
+  if (r.office === 'senate') return SPEND.states[r.state] ? SPEND.states[r.state].S : null;
+  if (r.office === 'house') { const m = /^([A-Z]{2})-(\d+)/.exec(r.id); return m ? SPEND.districts[`${m[1]}-${parseInt(m[2], 10)}`] || null : null; }
+  return null;
+}
+function pollFor(r) {
+  const P = S.polls; if (!P) return null;
+  if (r.office === 'national') { const g = P.genericBallot; return g && g.margin !== null && g.margin !== undefined ? { margin: g.margin, n: g.n, latestEnd: g.latest ? g.latest.endDate : '' } : null; }
+  if (r.office === 'senate') return (P.senate || {})[r.state] || null;
+  if (r.office === 'governor') return (P.governor || {})[r.state] || null;
+  const m = /^([A-Z]{2})-(\d+)/.exec(r.id); if (!m) return null;
+  return (P.house || {})[`${m[1]}-${parseInt(m[2], 10)}`] || null;
+}
+function parseCloseET(s) { const m = /(\d+):(\d+)\s*(AM|PM)/i.exec(s || ''); if (!m) return 99; let h = +m[1] % 12; if (/pm/i.test(m[3])) h += 12; return h * 60 + +m[2]; }
+
+// ---- table datasets: bellwethers (config) or whole chambers from the results feed
+let dataset = Q.get('table') || store.get('dataset') || 'bell';
+let sortKey = store.get('sortKey') || 'closeMin', sortDir = store.get('sortDir') || 1;
+const RATING_LABEL = { 'tossup': 'Toss-up', 'lean-dem': 'Lean D', 'lean-rep': 'Lean R', 'likely-dem': 'Likely D', 'likely-rep': 'Likely R', 'solid-dem': 'Solid D', 'solid-rep': 'Solid R' };
+const RATING_RANK = { 'tossup': 0, 'lean-dem': 1, 'lean-rep': 1, 'likely-dem': 2, 'likely-rep': 2, 'solid-dem': 3, 'solid-rep': 3 };
+let pollCloseByState = null;
+function closeFor(st) {
+  if (!pollCloseByState) { pollCloseByState = {}; for (const p of S.nyt.pollClosing || []) if (p.state) pollCloseByState[p.state] = p.t; }
+  const t = pollCloseByState[st]; if (!t) return '';
+  return new Date(t).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' });
+}
+// a row that looks like a config race, so the existing cell logic works for any dataset
+function rowsFor(ds) {
+  if (ds === 'bell') return S.config.races.map(r => ({ ...r, nytRace: S.nyt.races[r.id], k: S.kalshi.races[r.id], p: S.polymarket.races[r.id], hasK: !!r.kalshi, hasP: !!r.polymarket }));
+  if (!SEATS) return [];
+  const M = SEATS.markets || {};
+  const mk = (x, id, office) => {
+    const m = M[id], cfgRace = S.config.races.find(r => r.id === id);
+    const k = cfgRace ? S.kalshi.races[id] : (m && m.kD !== null ? { pD: m.kD, volume: m.kVol } : null);
+    const p = cfgRace ? S.polymarket.races[id] : (m && m.pD !== null ? { pD: m.pD, volume: m.pVol } : null);
+    return { id, office, state: x.state, signal: (cfgRace && cfgRace.signal) || RATING_LABEL[x.rating] || x.rating || '', pollCloseET: closeFor(x.state), margin2024: null, nytRace: x, k, p, hasK: !!(k || (cfgRace && cfgRace.kalshi)), hasP: !!(p || (cfgRace && cfgRace.polymarket)), rating: x.rating };
+  };
+  const key = x => x.rating && !x.rating.startsWith('solid') && !x.uncontested;
+  if (ds === 'home') {
+    // one row per distinct race across the guests' hometowns; the signal names the guests
+    const byRace = new Map();
+    const add = (x, id, office, who) => { if (!x) return; const e = byRace.get(id) || { x, id, office, who: [] }; e.who.push(who); byRace.set(id, e); };
+    for (const pl of (HOMES || [])) {
+      const h = pl.home; if (!h) continue;
+      const who = `${pl.name} · ${h.city}, ${h.state}${h.county ? ' (' + h.county + ')' : ''}`;
+      if (h.district) add(HOUSE_BY_ID[h.district] || null, h.district, 'house', who);
+      add(SEATS.senate.find(x => x.state === h.state) || null, `${h.state}-Sen`, 'senate', who);
+      add((SEATS.governor || []).find(x => x.state === h.state) || null, `${h.state}-Gov`, 'governor', who);
+    }
+    return Array.from(byRace.values()).map(e => { const row = mk(e.x, e.id, e.office); row.signal = e.who.join(' · '); row.isHome = true; return row; });
+  }
+  if (ds === 'senatekey' || ds === 'senate') return SEATS.senate.filter(key).map(x => mk(x, `${x.state}-Sen`, 'senate'));
+  if (ds === 'senateall') return SEATS.senate.map(x => mk(x, `${x.state}-Sen`, 'senate'));
+  const house = SEATS.house.filter(x => x.seat);
+  const list = ds === 'housekey' ? house.filter(key) : house;
+  return list.map(x => mk(x, `${x.state}-${parseInt(x.seat, 10)}`, 'house'));
+}
+// ---- table columns: order and visibility are configurable (drag a header to reorder, Columns button to pick)
+const prob = (v, has) => (!has || v === null || v === undefined) ? '<span class="muted">—</span>' : v >= 50 ? `<span class="d num">D ${v.toFixed(0)}</span>` : `<span class="r num">R ${(100 - v).toFixed(0)}</span>`;
+const td = (html, cls = '') => `<td class="${cls}">${html}</td>`;
+const editCell = (r, field, v, title) => { const txt = v === null ? '' : (v > 0 ? '+' : '') + v.toFixed(1); return `<td class="edit num" data-field="${field}" data-orig="${txt}" data-override="${store.get(`edit:${r.id}:${field}`) !== null ? 1 : 0}" contenteditable="true" spellcheck="false" title="${title}">${txt}</td>`; };
+const COLS = [
+  { k: 'id', label: 'Race', help: 'Race id. Click it for the detail view', cls: 'l', asc: true, cell: r => r.national ? `<td class="l race">${r.call}US</td>` : `<td class="l race" title="Click for race details">${r.call}<a class="rid" href="#" data-id="${esc(r.id)}">${esc(r.id)}</a></td>` },
+  { k: 'state', label: 'State', help: 'State', cls: 'l', asc: true, cell: r => td(esc(r.state || ''), 'l dim') },
+  { k: 'signal', label: 'Signal', help: 'What this race is a bellwether for (NYT rating for non-bellwethers)', cls: 'l', asc: true, cell: r => `<td class="l sig" title="${esc(r.signal)}">${esc(r.signal || '')}</td>` },
+  { k: 'rank', label: 'Rating', help: 'NYT race rating', cls: 'l', asc: true, cell: r => td(esc(RATING_LABEL[r.rating] || r.rating || '—'), 'l dim') },
+  { k: 'closeMin', label: 'Close', help: 'Poll closing time, Eastern', asc: true, cell: r => td(esc(r.pollCloseET || ''), 'num dim') },
+  { k: 'odds', label: 'Odds', help: 'Market win probability for the favored party: average of Kalshi and Polymarket (hover for each)', cell: r => `<td title="${r.kv === null ? 'Kalshi —' : 'Kalshi D ' + r.kv.toFixed(0) + '%'} · ${r.pv === null ? 'Poly —' : 'Poly D ' + r.pv.toFixed(0) + '%'}">${prob(r.odds, r.hasK || r.hasP)}</td>` },
+  { k: 'kv', label: 'Kalshi', help: 'Kalshi win probability for the favored party', cell: r => td(prob(r.kv, r.hasK)) },
+  { k: 'pv', label: 'Poly', help: 'Polymarket win probability for the favored party', cell: r => td(prob(r.pv, r.hasP)) },
+  { k: 'm24', label: "'24 pres", help: '2024 presidential margin in this district, D minus R, points. Click to override', cell: r => editCell(r, 'm24', r.m24, "2024 presidential margin, D − R. Click to edit; clear to reset.") },
+  { k: 'poll', label: 'Polls', help: 'Polling average, D minus R, and the number of polls (VoteHub)', cell: r => td(r.pl ? `<span title="${esc(r.pl.n + ' polls, last ' + r.pl.latestEnd)}">${fmtMargin(r.pl.margin)}<span class="muted"> ${r.pl.n}</span></span>` : '<span class="muted">—</span>', 'num') },
+  { k: 'live', label: 'Live D−R', help: 'Live margin from the vote count so far, D minus R, points. Click to override', cell: r => editCell(r, 'live', r.live, "Live margin, D − R. Fills from the count; click to override; clear to reset.") },
+  { k: 'rpt', label: 'Rpt', help: 'Share of the expected vote counted so far', cell: r => td(r.rpt === null || r.rpt === undefined ? '<span class="muted">—</span>' : `<span class="rpt num">${r.rpt}%</span>`) },
+  { k: 'over', label: 'Over', help: 'Democratic overperformance: live margin minus 2024 presidential margin. Green = D ahead of 2024, amber = behind', cell: r => td(fmtOver(r.over), 'num') },
+  { k: 'spend', label: 'Spend', help: 'Total spending this cycle, candidates plus outside groups (FEC)', cell: r => td(r.sp ? `<span title="${esc(`D ${fmtUSD(r.sp.totalD)} (cand ${fmtUSD(r.sp.candD)} + outside ${fmtUSD(r.sp.ieD)}) · R ${fmtUSD(r.sp.totalR)} (cand ${fmtUSD(r.sp.candR)} + outside ${fmtUSD(r.sp.ieR)})`)}">${fmtUSD(r.spend)}</span>` : '<span class="muted">—</span>', 'num dim') },
+  { k: 'votes', label: 'Votes', help: 'Votes counted so far', cell: r => td(r.votes ? r.votes.toLocaleString() : '<span class="muted">—</span>', 'num dim') },
+  { k: 'dem', label: 'Democrat', help: 'Democratic candidate (* incumbent)', cls: 'l', asc: true, cell: r => td(r.dCand ? `<span class="d">${esc(r.dCand.last)}${r.dCand.incumbent ? '*' : ''}</span>${r.dCand.won ? ' <span class="muted">✓</span>' : ''}` : '<span class="muted">—</span>', 'l') },
+  { k: 'dPct', label: 'D %', help: 'Democratic share of the vote so far', cell: r => td(r.dPct === null ? '<span class="muted">—</span>' : `<span class="d num">${r.dPct.toFixed(1)}</span>`) },
+  { k: 'rep', label: 'Republican', help: 'Republican candidate (* incumbent)', cls: 'l', asc: true, cell: r => td(r.rCand ? `<span class="r">${esc(r.rCand.last)}${r.rCand.incumbent ? '*' : ''}</span>${r.rCand.won ? ' <span class="muted">✓</span>' : ''}` : '<span class="muted">—</span>', 'l') },
+  { k: 'rPct', label: 'R %', help: 'Republican share of the vote so far', cell: r => td(r.rPct === null ? '<span class="muted">—</span>' : `<span class="r num">${r.rPct.toFixed(1)}</span>`) },
+  { k: 'lead', label: 'Count', help: 'Top two candidates and their shares', cls: 'l', cell: r => td(r.count, 'l') },
+];
+const DEFAULT_HIDDEN = { normal: ['state', 'rank', 'spend', 'votes', 'lead', 'kv', 'pv'], theater: ['state', 'rank', 'spend', 'votes', 'signal', 'closeMin', 'lead', 'dem', 'dPct', 'rep', 'rPct', 'kv', 'pv'], phone: ['state', 'rank', 'spend', 'votes', 'signal', 'closeMin', 'kv', 'pv', 'm24', 'poll', 'dem', 'dPct', 'rep', 'rPct'] };
+const colMode = () => document.body.classList.contains('phone') ? 'phone' : document.body.classList.contains('theater') ? 'theater' : 'normal';
+function colOrder() {
+  const keys = COLS.map(c => c.k), o = store.get('cols:order');
+  return Array.isArray(o) ? o.filter(k => keys.includes(k)).concat(keys.filter(k => !o.includes(k))) : keys;
+}
+function hiddenCols() { const h = store.get('cols:hidden:' + colMode()); return new Set(Array.isArray(h) ? h : DEFAULT_HIDDEN[colMode()]); }
+function visibleCols() { const hid = hiddenCols(); return colOrder().map(k => COLS.find(c => c.k === k)).filter(c => c && !hid.has(c.k)); }
+function renderHead() {
+  const cols = visibleCols();
+  $('#racehead').innerHTML = `<tr>${cols.map(c => `<th class="${c.cls || ''}" data-k="${c.k}"><span class="hl" draggable="true" title="${esc(c.help || c.label)} · click to sort · drag to reorder">${c.label}</span><i class="cr" draggable="false" title="Drag to resize · double-click to fit the data"></i></th>`).join('')}</tr>`;
+  if (typeof applyColWidths === 'function') applyColWidths();
+}
+// the Democrat and the Republican to show for a race: one per party, incumbent first, then most votes (AK lists two Sullivans)
+function topTwo(cands) {
+  const pick = party => cands.filter(c => c.party === party).sort((a, b) => (b.incumbent ? 1 : 0) - (a.incumbent ? 1 : 0) || (b.votes || 0) - (a.votes || 0))[0];
+  return [pick('D'), pick('R')].filter(Boolean);
+}
+function renderRaces() {
+  if (!S) return;
+  if (!$('#racehead').children.length) renderHead();
+  const rows = rowsFor(dataset).map(r => {
+    const n = r.nytRace, m24 = margin2024For(r), live = liveMarginFor(r), pl = pollFor(r), sp = spendFor(r);
+    let call = '<i class="call"></i>', count = '<span class="muted">—</span>';
+    if (n) {
+      if (n.winnerParty) call = `<i class="call ${n.winnerParty}" title="called"></i>`;
+      else if (n.runoff) call = `<i class="call RO" title="runoff"></i>`;
+      else if (n.leaderParty && n.totalVotes) call = `<i class="call l${n.leaderParty}" title="leading"></i>`;
+      const top = topTwo(n.candidates);
+      if (n.totalVotes && top.length) count = top.map(c => `<span class="${c.party.toLowerCase()}">${esc(c.last)}</span> <span class="num">${c.pct === null ? '' : c.pct.toFixed(1)}</span>`).join(' <span class="muted">·</span> ');
+      else if (top.length) count = `<span class="cands">${top.map(c => `<span class="${c.party.toLowerCase()}">${esc(c.last)}${c.incumbent ? '*' : ''}</span>`).join(' v ')}</span>`;
+      if (n.winnerParty) count += ' <span class="muted">✓</span>';
+      else if (n.runoff) count += ' <span class="under">runoff</span>';
+    }
+    const dCand = n ? n.candidates.find(c => c.party === 'D') || null : null, rCand = n ? n.candidates.find(c => c.party === 'R') || null : null;
+    return Object.assign(r, { m24, live, pl, sp, call, count, dCand, rCand,
+      dem: dCand ? dCand.last : null, rep: rCand ? rCand.last : null,
+      dPct: dCand && n.totalVotes ? dCand.pct : null, rPct: rCand && n.totalVotes ? rCand.pct : null,
+      poll: pl ? pl.margin : null, over: (m24 !== null && live !== null) ? live - m24 : null,
+      kv: r.k ? r.k.pD : null, pv: r.p ? r.p.pD : null, rpt: n ? n.eevp : null,
+      odds: (() => { const a = r.k ? r.k.pD : null, b = r.p ? r.p.pD : null; return (a !== null && b !== null) ? (a + b) / 2 : (a ?? b); })(),
+      lead: n && n.totalVotes && n.candidates[0] ? n.candidates[0].pct : null,
+      spend: sp ? sp.total : null, votes: n ? n.totalVotes : null,
+      closeMin: parseCloseET(r.pollCloseET), rank: RATING_RANK[r.rating] ?? 9 });
+  });
+  rows.sort((a, b) => {
+    const va = a[sortKey], vb = b[sortKey];
+    const na = va === null || va === undefined || va === '', nb = vb === null || vb === undefined || vb === '';
+    if (na && nb) return 0; if (na) return 1; if (nb) return -1;
+    const c = typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), undefined, { numeric: true });
+    return c * sortDir || (a.rank - b.rank) || a.id.localeCompare(b.id, undefined, { numeric: true });
+  });
+  const cols = visibleCols();
+  // the US row is pinned first in every dataset
+  let natHtml = '';
+  try {
+    const nr = nationalRow(), n = nr.nytRace, m24 = margin2024For(nr), live = liveMarginFor(nr), pl = pollFor(nr), sp = spendFor(nr);
+    const dC = n.candidates.find(c => c.party === 'D') || null, rC = n.candidates.find(c => c.party === 'R') || null;
+    Object.assign(nr, { m24, live, pl, sp, call: '<i class="call"></i>', count: n.totalVotes && dC && rC ? `<span class="d">D</span> <span class="num">${dC.pct === null ? '' : dC.pct.toFixed(1)}</span> <span class="muted">·</span> <span class="r">R</span> <span class="num">${rC.pct === null ? '' : rC.pct.toFixed(1)}</span>` : '<span class="muted">national House vote</span>',
+      dCand: dC ? { last: 'Democrats', incumbent: false, won: false } : { last: 'Democrats', incumbent: false, won: false }, rCand: { last: 'Republicans', incumbent: false, won: false },
+      dPct: dC && n.totalVotes ? dC.pct : null, rPct: rC && n.totalVotes ? rC.pct : null,
+      poll: pl ? pl.margin : null, over: (m24 !== null && live !== null) ? live - m24 : null,
+      kv: nr.k ? nr.k.pD : null, pv: nr.p ? nr.p.pD : null, rpt: n.eevp, lead: null, spend: sp ? sp.total : null, votes: n.totalVotes || null, closeMin: 0, rank: -1,
+      odds: (() => { const a = nr.k ? nr.k.pD : null, b = nr.p ? nr.p.pD : null; return (a !== null && b !== null) ? (a + b) / 2 : (a ?? b); })() });
+    natHtml = `<tr data-id="US" class="national" title="National House popular vote (NYT/AP), House-control odds, generic-ballot polls, 2024 presidential margin">${cols.map(c => c.cell(nr)).join('')}</tr>`;
+  } catch (e) { clientError('page', 'national row: ' + e.message); }
+  const html = natHtml + rows.map(r => `<tr data-id="${esc(r.id)}" class="${window.rowClass ? rowClass(r.id) : ''}">${cols.map(c => c.cell(r)).join('')}</tr>`).join('');
+  // avoid clobbering a cell the user is typing in (only an edit cell; a focused link must not freeze the table)
+  const active = document.activeElement;
+  if (active && active.closest && active.closest('#racebody td.edit')) return;
+  $('#racebody').innerHTML = html || (dataset === 'home' ? '<tr><td colspan="99" class="l muted">No hometowns yet. Guests add a home zip when they join the Game tab.</td></tr>' : '');
+  document.querySelectorAll('#racehead th[data-k]').forEach(th => { th.classList.toggle('sorted', th.dataset.k === sortKey); th.classList.toggle('desc', th.dataset.k === sortKey && sortDir < 0); });
+  $('#racemeta').textContent = `${rows.length} races · Kalshi ${ago(S.kalshi.updatedAt)} · Poly ${ago(S.polymarket.updatedAt)} · count ${ago(S.nyt.updatedAt)}`;
+}
+// race id -> detail modal (modal.js); also ?modal=NY-17 on load
+$('#racebody').addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a.rid'); if (!a) return;
+  e.preventDefault();
+  if (window.openRaceModal) window.openRaceModal(a.dataset.id); else clientError('page', 'modal.js not loaded');
+});
+if (Q.get('modal')) setTimeout(() => { if (window.openRaceModal && S) window.openRaceModal(Q.get('modal')); }, 2500);
+// drag a header to reorder columns
+let dragKey = null;
+$('#racehead').addEventListener('dragstart', e => {
+  if (!(e.target.closest && e.target.closest('.hl')) || e.target.closest('.cr')) { e.preventDefault(); return; }   // only the label starts a reorder
+  const th = e.target.closest('th[data-k]'); if (!th) return;
+  dragKey = th.dataset.k; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragKey); } catch {} th.classList.add('dragging');
+});
+$('#racehead').addEventListener('dragend', e => { const th = e.target.closest('th'); if (th) th.classList.remove('dragging'); document.querySelectorAll('#racehead th').forEach(t => t.classList.remove('over-l', 'over-r')); });
+$('#racehead').addEventListener('dragover', e => {
+  const th = e.target.closest('th[data-k]'); if (!th || !dragKey || th.dataset.k === dragKey) return;
+  e.preventDefault(); const r = th.getBoundingClientRect(), left = e.clientX < r.left + r.width / 2;
+  document.querySelectorAll('#racehead th').forEach(t => t.classList.remove('over-l', 'over-r')); th.classList.add(left ? 'over-l' : 'over-r');
+});
+$('#racehead').addEventListener('drop', e => {
+  const th = e.target.closest('th[data-k]'); if (!th || !dragKey || th.dataset.k === dragKey) return;
+  e.preventDefault();
+  const r = th.getBoundingClientRect(), before = e.clientX < r.left + r.width / 2;
+  const order = colOrder().filter(k => k !== dragKey);
+  const idx = order.indexOf(th.dataset.k); order.splice(before ? idx : idx + 1, 0, dragKey);
+  store.set('cols:order', order); dragKey = null; renderHead(); renderRaces();
+});
+// column picker
+function renderColPick() {
+  const hid = hiddenCols();
+  $('#colpick').innerHTML = `<div class="cp-title">Columns <span class="muted">${colMode() === 'theater' ? 'theater' : 'normal'} layout</span></div>` +
+    colOrder().map(k => { const c = COLS.find(x => x.k === k); return `<label><input type="checkbox" data-k="${k}" ${hid.has(k) ? '' : 'checked'}> ${c.label}</label>`; }).join('') +
+    `<div class="cp-foot"><button id="cp-reset">Reset columns</button></div>`;
+}
+$('#colsbtn').addEventListener('click', e => {
+  e.stopPropagation(); const p = $('#colpick'); const open = p.style.display !== 'block';
+  if (open) { renderColPick(); const r = e.currentTarget.getBoundingClientRect(); p.style.top = (r.bottom + 4) + 'px'; p.style.left = Math.max(8, Math.min(r.right - 190, window.innerWidth - 200)) + 'px'; }
+  p.style.display = open ? 'block' : 'none';
+});
+$('#colpick').addEventListener('click', e => e.stopPropagation());
+$('#colpick').addEventListener('change', e => {
+  const cb = e.target.closest('input[data-k]'); if (!cb) return;
+  const hid = hiddenCols(); if (cb.checked) hid.delete(cb.dataset.k); else hid.add(cb.dataset.k);
+  if (hid.size >= COLS.length) { cb.checked = true; return; }
+  store.set('cols:hidden:' + colMode(), Array.from(hid)); renderHead(); renderRaces();
+});
+$('#colpick').addEventListener('click', e => { if (e.target.id === 'cp-reset') { store.set('cols:order', null); store.set('cols:hidden:normal', null); store.set('cols:hidden:theater', null); store.set('cols:hidden:phone', null); renderColPick(); renderHead(); renderRaces(); } });
+document.addEventListener('click', () => { $('#colpick').style.display = 'none'; });
+let colDragged = false;
+$('#races thead').addEventListener('click', e => {
+  if (colDragged) { colDragged = false; return; }
+  const th = e.target.closest('th[data-k]'); if (!th || e.target.classList.contains('cr')) return;
+  if (sortKey === th.dataset.k) sortDir = -sortDir; else { sortKey = th.dataset.k; sortDir = (sortKey === 'id' || sortKey === 'signal' || sortKey === 'closeMin') ? 1 : -1; }
+  store.set('sortKey', sortKey); store.set('sortDir', sortDir); renderRaces();
+});
+$('#datasets').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  dataset = b.dataset.d; store.set('dataset', dataset);
+  document.querySelectorAll('#datasets button').forEach(x => x.classList.toggle('on', x === b));
+  renderRaces();
+});
+document.querySelectorAll('#datasets button').forEach(x => x.classList.toggle('on', x.dataset.d === dataset));
+
+$('#racebody').addEventListener('focusout', e => {
+  const td = e.target.closest && e.target.closest('td.edit'); if (!td) return;
+  const id = td.parentElement.dataset.id, field = td.dataset.field;
+  const text = td.textContent.trim();
+  if (text === (td.dataset.orig || '')) { renderRaces(); return; }        // nothing typed: don't turn the shown value into an override
+  // accepts "+2.4", "-3", "−3", "D+2", "R+3", "R3", "3R", "EVEN"
+  const t = text.replace(/−/g, '-').toUpperCase();
+  if (t === '') store.set(`edit:${id}:${field}`, null);
+  else if (t === 'EVEN' || t === 'E' || t === '0') store.set(`edit:${id}:${field}`, 0);
+  else { const neg = /R/.test(t) || /^-/.test(t.replace(/^D/, '')); const n = parseFloat(t.replace(/[^0-9.]/g, '')); if (!isNaN(n)) store.set(`edit:${id}:${field}`, Math.round((neg ? -n : n) * 10) / 10); }
+  renderRaces(); renderGB();
+});
+$('#racebody').addEventListener('keydown', e => {
+  if (!e.target.closest || !e.target.closest('td.edit')) return;
+  if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+  if (e.key === 'Escape') { e.preventDefault(); e.target.textContent = ''; e.target.blur(); }
+});
+
+// ------------------------------------------------------------ render: seats
+function seatColor(st) { return { D: 'var(--dem)', lD: 'var(--dem-lead)', R: 'var(--rep)', lR: 'var(--rep-lead)', O: 'var(--oth)', lO: '#6b56b8', RO: '#8a6d1f', nD: 'var(--dem-dim)', nR: 'var(--rep-dim)', nO: '#3b2f6b', U: 'var(--none)' }[st] || 'var(--none)'; }
+function classify(r) {
+  if (r.winnerParty === 'D') return 'D'; if (r.winnerParty === 'R') return 'R'; if (r.winnerParty === 'O') return 'O';
+  if (r.runoff) return 'RO';
+  if (r.totalVotes && r.leaderParty === 'D') return 'lD'; if (r.totalVotes && r.leaderParty === 'R') return 'lR'; if (r.totalVotes && r.leaderParty === 'O') return 'lO';
+  return 'U';
+}
+function seatStrip(items, total, toWin, rows, widthPct = 100) {
+  // items: [{st, label}] already ordered D-side → R-side
+  const cols = Math.ceil(total / rows), tile = 10, gap = 2, W = cols * (tile + gap), H = rows * (tile + gap);
+  let svg = `<svg viewBox="0 0 ${W} ${H + 4}" preserveAspectRatio="xMinYMin meet" style="width:${widthPct}%">`;
+  items.forEach((it, i) => {
+    const c = Math.floor(i / rows), r = i % rows;
+    svg += `<rect x="${c * (tile + gap)}" y="${r * (tile + gap)}" width="${tile}" height="${tile}" rx="1" fill="${seatColor(it.st)}"><title>${esc(it.label)}</title></rect>`;
+  });
+  const xm = toWin / total * W;
+  svg += `<line x1="${xm}" y1="-1" x2="${xm}" y2="${H + 3}" stroke="var(--ink)" stroke-width="1"/>`;
+  svg += '</svg>';
+  return svg;
+}
+function renderSeats() {
+  if (!SEATS) { $('#seats').innerHTML = '<span class="muted">waiting for results feed…</span>'; return; }
+  const house = SEATS.house || [], senate = SEATS.senate || [];
+  const nH = S.nyt.control && S.nyt.control.house, nS = S.nyt.control && S.nyt.control.senate;
+  const order = { D: 0, lD: 1, O: 2, U: 3, lR: 4, R: 5 };
+  const label = r => `${r.id.split('-')[0]}${r.seat ? '-' + r.seat : ''} · ${r.candidates.filter(c => c.party !== 'O').slice(0, 2).map(c => `${c.last} ${c.pct ?? ''}`).join(' / ')}${r.eevp ? ` · ${r.eevp}% in` : ''}`;
+  const hItems = house.map(r => ({ st: classify(r), label: label(r), m: r.liveMargin })).sort((a, b) => order[a.st] - order[b.st] || ((b.m ?? 0) - (a.m ?? 0)));
+  const cnt = arr => arr.reduce((m, x) => (m[x.st] = (m[x.st] || 0) + 1, m), {});
+  const hc = cnt(hItems);
+  // senate: holdovers (not up) on the outside
+  const sItems = [];
+  const notUpD = nS ? nS.notUpD : 0, notUpR = nS ? nS.notUpR : 0, notUpO = nS ? nS.notUpO : 0;
+  for (let i = 0; i < notUpD; i++) sItems.push({ st: 'nD', label: 'Democrat, not up in 2026' });
+  for (let i = 0; i < notUpO; i++) sItems.push({ st: 'nO', label: 'Independent, not up in 2026' });
+  const sRaces = senate.map(r => ({ st: classify(r), label: label(r), m: r.liveMargin })).sort((a, b) => order[a.st] - order[b.st] || ((b.m ?? 0) - (a.m ?? 0)));
+  sItems.push(...sRaces);
+  for (let i = 0; i < notUpR; i++) sItems.push({ st: 'nR', label: 'Republican, not up in 2026' });
+  const sc = cnt(sRaces);
+  const totalS = Math.max(100, sItems.length);
+  const legend = `<div class="legend"><span><i style="background:var(--dem)"></i>called D</span><span><i style="background:var(--dem-lead)"></i>leading D</span><span><i style="background:var(--none)"></i>no result</span><span><i style="background:var(--rep-lead)"></i>leading R</span><span><i style="background:var(--rep)"></i>called R</span><span><i style="background:var(--dem-dim)"></i><i style="background:var(--rep-dim)"></i>not up</span><span>│ majority</span></div>`;
+  $('#seats').innerHTML = `
+    <div class="strip"><div class="cap"><b>HOUSE</b><span><span class="d num">${hc.D || 0}</span> called · <span class="d num">${hc.lD || 0}</span> leading</span><span class="muted">${hc.U || 0} no result</span><span><span class="r num">${hc.lR || 0}</span> leading · <span class="r num">${hc.R || 0}</span> called</span><span class="muted">218 to win${nH && nH.winner ? ` · ${nH.winner} CONTROL` : ''}</span></div>${seatStrip(hItems, 435, 218, 5)}</div>
+    <div class="strip"><div class="cap"><b>SENATE</b><span><span class="d num">${notUpD + (sc.D || 0)}</span> D incl. ${notUpD} not up · <span class="d num">${sc.lD || 0}</span> leading</span><span class="muted">${sc.U || 0} no result</span><span><span class="r num">${sc.lR || 0}</span> leading · <span class="r num">${notUpR + (sc.R || 0)}</span> R incl. ${notUpR} not up</span><span class="muted">${nS ? nS.toWin : 51} for D · 50 for R (VP)</span></div>${seatStrip(sItems, totalS, nS ? nS.toWin : 51, 2, Math.round(Math.ceil(totalS / 2) / 87 * 100))}</div>
+    ${legend}`;
+  $('#viewmeta').textContent = `results ${ago(S.nyt.updatedAt)}${S.nyt.resultsUpdatedAt ? ' · AP feed ' + ago(Date.parse(S.nyt.resultsUpdatedAt)) : ''}`;
+}
+
+// ------------------------------------------------------------ render: map
+let topo = null, geoFeatures = null, pathGen = null;
+async function loadTopo() {
+  if (topo) return;
+  const r = await fetch('/vendor/states-10m.json'); topo = await r.json();
+  geoFeatures = topojson.feature(topo, topo.objects.states).features;
+  pathGen = d3.geoPath(d3.geoAlbersUsa().scale(1300).translate([487.5, 305]));
+}
+const divergingD = d3.scaleLinear().domain([0, 20]).range(['#2b3340', '#3d8bff']).clamp(true);
+const divergingR = d3.scaleLinear().domain([0, 20]).range(['#2b3340', '#ff4d4d']).clamp(true);
+const overScale = d3.scaleLinear().domain([0, 10]).range(['#2b3340', '#2bd576']).clamp(true);
+const underScale = d3.scaleLinear().domain([0, 10]).range(['#2b3340', '#ffae1a']).clamp(true);
+function marginColor(m) { if (m === null || m === undefined) return 'var(--none)'; return m >= 0 ? divergingD(m) : divergingR(-m); }
+// betting markets: Democratic win probability for a race id ("GA-Sen", "NY-17") from the chosen source
+function marketProb(id) {
+  const m = SEATS && SEATS.markets ? SEATS.markets[id] : null;
+  const cfgRace = S.config.races.find(r => r.id === id);
+  const k = cfgRace && S.kalshi.races[id] ? S.kalshi.races[id].pD : (m ? m.kD : null);
+  const p = cfgRace && S.polymarket.races[id] ? S.polymarket.races[id].pD : (m ? m.pD : null);
+  const avg = (k !== null && p !== null) ? (k + p) / 2 : (k ?? p);
+  return { k, p, v: marketSrc === 'k' ? k : marketSrc === 'p' ? p : avg };
+}
+const marketColor = pD => pD === null || pD === undefined ? 'var(--none)' : marginColor((pD - 50) * 0.5);   // 90% D ≈ full blue
+const RATING_COLOR = { 'solid-dem': '#3d8bff', 'likely-dem': '#2f66bf', 'lean-dem': '#244a86', 'tossup': '#6b6f78', 'lean-rep': '#8a2e2e', 'likely-rep': '#bf3a3a', 'solid-rep': '#ff4d4d' };
+const ratingColor = r => RATING_COLOR[r] || 'var(--none)';
+const marketLine = (id) => { const m = marketProb(id); return (m.k === null && m.p === null) ? null : `markets: Kalshi ${m.k === null ? '—' : 'D ' + m.k.toFixed(0) + '%'} · Poly ${m.p === null ? '—' : 'D ' + m.p.toFixed(0) + '%'}`; };
+
+// spending: sequential ramps by dollars (sqrt to tame the skew), one hue per filter
+const SPEND_RAMP = { all: ['#1c2532', '#e9eff6'], D: ['#1c2532', '#3d8bff'], R: ['#1c2532', '#ff4d4d'] };
+function spendValue(b) { if (!b) return null; return spendFilter === 'D' ? b.totalD : spendFilter === 'R' ? b.totalR : b.total; }
+function spendScale(values) {
+  const max = Math.max(1, ...values.filter(v => v !== null && v !== undefined));
+  return { max, color: d3.scaleSqrt().domain([0, max]).range(SPEND_RAMP[spendFilter] || SPEND_RAMP.all).clamp(true) };
+}
+function spendFill(b, scale) {
+  if (!b || !b.total) return 'var(--none)';
+  if (spendFilter === 'share') return marginColor((b.totalD - b.totalR) / (b.totalD + b.totalR || 1) * 40);
+  const v = spendValue(b); return v ? scale.color(v) : 'var(--none)';
+}
+function spendLegend(scale, unit) {
+  const lab = spendFilter === 'D' ? 'Democratic-side' : spendFilter === 'R' ? 'Republican-side' : 'total';
+  if (spendFilter === 'share') return `<div class="legend"><span><i style="background:var(--dem)"></i>D outspent R</span><span><i style="background:var(--rep)"></i>R outspent D</span><span>shade = share gap · candidate committees + outside groups, FEC 2025–26</span></div>`;
+  const ramp = SPEND_RAMP[spendFilter] || SPEND_RAMP.all;
+  return `<div class="legend"><span><i style="background:linear-gradient(90deg,${ramp[0]},${ramp[1]});width:60px"></i>${lab} spend per ${unit}, $0 → ${fmtUSD(scale.max)}</span><span>candidate committees + outside groups, FEC 2025–26</span></div>`;
+}
+function diffColor(d) { if (d === null || d === undefined) return 'var(--none)'; return d >= 0 ? overScale(d) : underScale(-d); }
+
+function stateData(st) {
+  // returns {live, poll, title lines} for current layer
+  const polls = S.polls || {};
+  if (mapLayer === 'house') {
+    const rs = (SEATS ? SEATS.house : []).filter(r => r.state === st);
+    let d = 0, r_ = 0, lines = [];
+    for (const r of rs) { const c = classify(r); if (c === 'D' || c === 'lD') d++; if (c === 'R' || c === 'lR') r_++; }
+    const hp = Object.entries(polls.house || {}).filter(([k]) => k.startsWith(st + '-'));
+    const pollAvg = hp.length ? hp.reduce((s, [, v]) => s + v.margin, 0) / hp.length : null;
+    const liveRs = rs.filter(r => r.totalVotes);
+    const liveAvg = liveRs.length ? liveRs.reduce((s, r) => s + (r.liveMargin || 0), 0) / liveRs.length : null;
+    lines.push(`${rs.length} House seats · D ${d} / R ${r_} called or leading`);
+    const mv = stateMarket(st); if (mv !== null) lines.push(`markets: mean D win prob ${mv.toFixed(0)}% across districts with a market`);
+    for (const [k, v] of hp.slice(0, 6)) { const race = rs.find(r => `${st}-${r.seat}` === k); lines.push(`${k}: poll ${fmtM(v.margin)} (${v.n}) · live ${race ? fmtM(race.liveMargin) : '—'}`); }
+    return { live: rs.length ? d - r_ : null, liveIsNet: true, poll: pollAvg, liveMargin: liveAvg, lines, called: null };
+  }
+  const list = mapLayer === 'senate' ? (SEATS ? SEATS.senate : []) : (SEATS ? SEATS.governor || [] : []);
+  const rs = list.filter(r => r.state === st);
+  const pollTbl = mapLayer === 'senate' ? polls.senate : polls.governor;
+  const pl = pollTbl && pollTbl[st];
+  if (!rs.length) return { live: null, poll: pl ? pl.margin : null, lines: pl ? [`poll avg ${fmtM(pl.margin)} (${pl.n} polls)`] : [], none: true };
+  const r = rs.sort((a, b) => (b.totalVotes || 0) - (a.totalVotes || 0))[0];
+  const lines = [];
+  for (const x of rs) {
+    const c = classify(x);
+    lines.push(`${x.seatLabel || (mapLayer === 'senate' ? 'Senate' : 'Governor')}${x.eevp ? ` · ${x.eevp}% in` : ''}${x.winnerParty ? ' · CALLED ' + x.winnerParty : ''}`);
+    for (const cd of x.candidates.filter(c => c.party !== 'O').slice(0, 2)) lines.push(`  ${cd.last}${cd.incumbent ? '*' : ''} (${cd.party}) ${cd.pct === null ? '' : cd.pct.toFixed(1) + '%'}`);
+  }
+  if (mapLayer === 'senate') { const ml = marketLine(`${st}-Sen`); if (ml) lines.push(ml); }
+  if (pl) lines.push(`poll avg ${fmtM(pl.margin)} · ${pl.n} polls · last ${pl.latestEnd}`);
+  if (pl && r.liveMargin !== null && r.totalVotes) lines.push(`live − polls: ${(r.liveMargin - pl.margin >= 0 ? '+' : '') + (r.liveMargin - pl.margin).toFixed(1)}`);
+  return { live: r.totalVotes ? r.liveMargin : null, poll: pl ? pl.margin : null, lines, cls: classify(r), race: r };
+}
+function fmtM(v) { if (v === null || v === undefined) return '—'; return Math.abs(v) < .05 ? 'EVEN' : v > 0 ? `D+${v.toFixed(1)}` : `R+${(-v).toFixed(1)}`; }
+
+function spendBucket(st) {
+  if (!SPEND || !SPEND.states[st]) return null;
+  const s = SPEND.states[st];
+  return mapLayer === 'house' ? s.H : mapLayer === 'senate' ? s.S : null;   // FEC covers federal races only
+}
+let stateSpendScale = null;
+function stateMarket(st) {
+  if (mapLayer === 'senate') return marketProb(`${st}-Sen`).v;
+  if (mapLayer === 'house') {
+    const vals = (SEATS ? SEATS.house : []).filter(r => r.state === st && r.seat).map(r => marketProb(`${st}-${parseInt(r.seat, 10)}`).v).filter(v => v !== null && v !== undefined);
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  }
+  return null;
+}
+function stateRating(st) {
+  if (mapLayer === 'house') {
+    const rs = (SEATS ? SEATS.house : []).filter(r => r.state === st && r.rating);
+    if (!rs.length) return null;
+    const lean = rs.reduce((s, r) => s + (r.rating.includes('dem') ? 1 : r.rating.includes('rep') ? -1 : 0), 0);
+    return marginColor(lean * 4);
+  }
+  const r = (sd => sd.race)(stateData(st)); return r ? ratingColor(r.rating) : null;
+}
+// One rule set for every layer × mode:
+//   no race in this layer            -> NO_RACE (near-black), in every mode
+//   race, but this mode has no data  -> var(--none) (gray), in every mode
+//   Senate / Governor: one race per state. House net: the state's districts aggregated
+//   (net seats for Live, means for Markets / Polls / Live−polls, net lean for Ratings, state House $ for Spending).
+//   Governor has no markets and no FEC data, so those modes are gray for every state.
+const NO_RACE = '#0d1219';
+const MODE_UNAVAILABLE = { governor: { markets: 'No governor markets are fetched.', spend: 'FEC covers federal races only.' } };
+function fillFor(sd, st) {
+  const noRace = mapLayer === 'house' ? !(SEATS && SEATS.house.some(r => r.state === st)) : sd.none;
+  if (noRace) return NO_RACE;
+  if (MODE_UNAVAILABLE[mapLayer] && MODE_UNAVAILABLE[mapLayer][mapMode]) return 'var(--none)';
+  switch (mapMode) {
+    case 'live':
+      if (mapLayer === 'house') return sd.live === null ? 'var(--none)' : marginColor(sd.live * 4);
+      if (sd.cls === 'D') return 'var(--dem)'; if (sd.cls === 'R') return 'var(--rep)'; if (sd.cls === 'O') return 'var(--oth)';
+      if (sd.cls === 'lD' || sd.cls === 'lR') return marginColor(sd.live);
+      return 'var(--none)';
+    case 'markets': return marketColor(stateMarket(st));
+    case 'polls': return marginColor(sd.poll);
+    case 'diff': { const lv = mapLayer === 'house' ? sd.liveMargin : sd.live; return (lv === null || lv === undefined || sd.poll === null || sd.poll === undefined) ? 'var(--none)' : diffColor(lv - sd.poll); }
+    case 'ratings': return stateRating(st) || 'var(--none)';
+    case 'spend': return spendFill(spendBucket(st), stateSpendScale);
+  }
+  return 'var(--none)';
+}
+// One legend builder for states, districts and hexes, so the same mode reads the same way everywhere.
+function legendFor(unit) {
+  const sw = (c, t) => `<span><i style="background:${c}"></i>${t}</span>`;
+  const none = unit === 'state' ? sw(NO_RACE, 'no race') : '';
+  const note = MODE_UNAVAILABLE[mapLayer] && MODE_UNAVAILABLE[mapLayer][mapMode];
+  if (note && unit === 'state') return `<div class="legend"><span class="under">${note} Pick Senate, House net or Districts.</span></div>`;
+  const agg = unit === 'state' && mapLayer === 'house';
+  switch (mapMode) {
+    case 'live': return agg
+      ? `<div class="legend">${sw('var(--dem)', 'net D seats, called + leading')}${sw('var(--rep)', 'net R seats')}${sw('var(--none)', 'no votes yet')}${none}</div>`
+      : `<div class="legend">${sw('var(--dem)', 'called D')}${sw('var(--rep)', 'called R')}<span>shaded = leading, by margin</span>${sw('var(--none)', 'no votes yet')}${none}</div>`;
+    case 'markets': return `<div class="legend">${sw('var(--dem)', 'D favored')}${sw('var(--rep)', 'R favored')}<span>shade = ${agg ? 'mean district ' : ''}win probability (${marketSrc === 'k' ? 'Kalshi' : marketSrc === 'p' ? 'Polymarket' : 'avg of Kalshi + Polymarket'})</span>${sw('var(--none)', 'no market')}${none}</div>`;
+    case 'polls': return `<div class="legend">${sw('var(--dem)', 'polls D+')}${sw('var(--rep)', 'polls R+')}<span>${agg ? 'mean of district polls · ' : ''}VoteHub, last 45d</span>${sw('var(--none)', 'no polls')}${none}</div>`;
+    case 'diff': return `<div class="legend">${sw('var(--over)', 'D running ahead of polls')}${sw('var(--under)', 'D running behind polls')}${sw('var(--none)', 'no votes or no polls')}${none}</div>`;
+    case 'ratings': return agg
+      ? `<div class="legend">${sw('var(--dem)', 'more D-rated seats')}${sw('var(--rep)', 'more R-rated seats')}<span class="muted">NYT ratings, net per state</span>${none}</div>`
+      : `<div class="legend">${Object.entries(RATING_COLOR).map(([k, c]) => sw(c, RATING_LABEL[k] || k)).join('')}<span class="muted">NYT ratings</span>${none}</div>`;
+    case 'spend': {
+      const scale = unit === 'state' ? stateSpendScale : districtSpendScale;
+      const nat = unit === 'state' && SPEND && SPEND.national ? (mapLayer === 'house' ? SPEND.national.H : SPEND.national.S) : null;
+      return spendLegend(scale, unit === 'state' ? 'state' : 'district').replace('</div>', `${nat ? `<span>national ${mapLayer === 'house' ? 'House' : 'Senate'}: <span class="d">D ${fmtUSD(nat.totalD)}</span> · <span class="r">R ${fmtUSD(nat.totalR)}</span></span>` : ''}${none}</div>`);
+    }
+  }
+  return '';
+}
+
+// ---- district-level geometry (real boundaries + hex cartogram), same ids "ST-N"
+let DIST = null, HEX = null, HEXSTATES = null, distErr = null, hexErr = null;
+function asFeatures(json, name) {
+  if (json && json.type === 'Topology') { const o = json.objects[name] || json.objects[Object.keys(json.objects)[0]]; return topojson.feature(json, o).features; }
+  if (json && json.type === 'FeatureCollection') return json.features;
+  throw new Error('unrecognized geometry');
+}
+async function loadDistricts() {
+  if (DIST || distErr) return;
+  try { const r = await fetch('/vendor/districts.json'); if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(); DIST = asFeatures(j, 'districts'); }
+  catch (e) { distErr = e.message; }
+}
+async function loadHex() {
+  if (HEX || hexErr) return;
+  try {
+    const r = await fetch('/vendor/hexmap.json'); if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json();
+    if (j.type === 'HexBundle') { HEX = j.hex.features; HEXSTATES = j.states ? j.states.features : null; }
+    else { HEX = asFeatures(j, 'hex'); HEXSTATES = j.type === 'Topology' && j.objects.states ? topojson.feature(j, j.objects.states).features : null; }
+  } catch (e) { hexErr = e.message; }
+}
+const featId = f => String(f.id ?? (f.properties && (f.properties.id || `${f.properties.state}-${f.properties.district}`)));
+function districtInfo(id) {
+  const r = HOUSE_BY_ID[id] || null;
+  const pl = S.polls && S.polls.house ? S.polls.house[id] : null;
+  const sp = SPEND ? SPEND.districts[id] : null;
+  return { r, pl, sp, live: r && r.totalVotes ? r.liveMargin : null, cls: r ? classify(r) : 'U' };
+}
+let districtSpendScale = null;
+function fillForDistrict(id) {
+  const d = districtInfo(id);
+  if (mapMode === 'spend') return spendFill(d.sp, districtSpendScale);
+  if (mapMode === 'markets') return marketColor(marketProb(id).v);
+  if (mapMode === 'ratings') return d.r ? ratingColor(d.r.rating) : '#0d1219';
+  if (mapMode === 'polls') return marginColor(d.pl ? d.pl.margin : null);
+  if (mapMode === 'diff') return (d.live === null || !d.pl) ? 'var(--none)' : diffColor(d.live - d.pl.margin);
+  if (d.cls === 'D') return 'var(--dem)'; if (d.cls === 'R') return 'var(--rep)'; if (d.cls === 'O') return 'var(--oth)';
+  if (d.cls === 'lD' || d.cls === 'lR') return marginColor(d.live);
+  return d.r ? 'var(--none)' : '#0d1219';   // live mode shows counted votes only
+}
+function districtTipLines(id) {
+  const d = districtInfo(id), lines = [];
+  if (d.r) {
+    lines.push(`${d.r.rating || ''}${d.r.eevp ? ` · ${d.r.eevp}% in` : ''}${d.r.winnerParty ? ' · CALLED ' + d.r.winnerParty : ''}${d.r.uncontested ? ' · uncontested' : ''}`);
+    for (const c of d.r.candidates.filter(c => c.party !== 'O').slice(0, 2)) lines.push(`  ${c.last}${c.incumbent ? '*' : ''} (${c.party}) ${c.pct === null ? '' : c.pct.toFixed(1) + '%'}`);
+    if (d.r.margin2024 !== null && d.r.margin2024 !== undefined) lines.push(`2024 pres ${fmtM(d.r.margin2024)}${d.live !== null ? ` · live ${fmtM(d.live)} · swing ${(d.live - d.r.margin2024 >= 0 ? '+' : '') + (d.live - d.r.margin2024).toFixed(1)}` : ''}`);
+  } else lines.push('no race data');
+  const ml = marketLine(id); if (ml) lines.push(ml);
+  if (d.pl) lines.push(`poll avg ${fmtM(d.pl.margin)} · ${d.pl.n} polls · last ${d.pl.latestEnd}${d.live !== null ? ` · live − polls ${(d.live - d.pl.margin >= 0 ? '+' : '') + (d.live - d.pl.margin).toFixed(1)}` : ''}`);
+  if (d.sp && d.sp.total) lines.push(`spend D ${fmtUSD(d.sp.totalD)} · R ${fmtUSD(d.sp.totalR)} · total ${fmtUSD(d.sp.total)}`);
+  return lines;
+}
+const marketsLegend = () => `<div class="legend"><span><i style="background:var(--dem)"></i>D favored</span><span><i style="background:var(--rep)"></i>R favored</span><span>shade = win probability (${marketSrc === 'k' ? 'Kalshi' : marketSrc === 'p' ? 'Polymarket' : 'average of Kalshi and Polymarket'})</span><span><i style="background:var(--none)"></i>no market</span></div>`;
+const ratingsLegend = () => `<div class="legend">${Object.entries(RATING_COLOR).map(([k, c]) => `<span><i style="background:${c}"></i>${RATING_LABEL[k] || k}</span>`).join('')}<span class="muted">NYT ratings</span></div>`;
+function districtLegend() { return legendFor('district'); }
+function prepDistrictSpendScale() {
+  if (mapMode !== 'spend' || !SPEND) { districtSpendScale = spendScale([1]); return; }
+  districtSpendScale = spendScale(Object.values(SPEND.districts).map(spendValue));
+}
+async function renderDistrictMap() {
+  await loadDistricts();
+  if (!DIST) { $('#map').innerHTML = `<div class="muted" style="padding:20px">District boundaries not available yet (${esc(distErr || 'loading')}). Expected at /vendor/districts.json.</div>`; return; }
+  prepDistrictSpendScale();
+  const paths = DIST.map(f => `<path class="d" d="${pathGen(f)}" fill="${fillForDistrict(featId(f))}" data-id="${esc(featId(f))}"></path>`).join('');
+  const outline = geoFeatures.map(f => `<path class="outline" d="${pathGen(f)}"></path>`).join('');
+  $('#map').innerHTML = `<svg viewBox="0 0 975 610"><g class="zl">${paths}${outline}</g></svg>${districtLegend()}`;
+  attachZoom('map');
+  $('#viewmeta').textContent = `districts · ${mapMode}${mapMode === 'spend' ? ' · ' + spendFilter : ''}`;
+}
+
+// zoom + pan: one d3.zoom per view, transform kept across re-renders
+function attachZoom(which) {
+  const svg = d3.select(`#${which} svg`); if (svg.empty()) return;
+  const g = svg.select('g.zl');
+  const z = d3.zoom().scaleExtent([1, 14]).on('zoom', ev => { zoomState[which] = ev.transform; g.attr('transform', ev.transform); });
+  svg.call(z).on('dblclick.zoom', null);
+  svg.node().__zoom_behavior = z;
+  svg.call(z.transform, zoomState[which]);
+}
+function zoomBy(which, k) {
+  const svg = d3.select(`#${which} svg`); if (svg.empty()) return;
+  const z = svg.node().__zoom_behavior; if (!z) return;
+  if (k === 0) svg.transition().duration(200).call(z.transform, d3.zoomIdentity);
+  else svg.transition().duration(200).call(z.scaleBy, k);
+}
+$('#zoomctl').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const which = view === 'hex' ? 'hex' : 'map'; zoomBy(which, b.dataset.z === 'in' ? 1.6 : b.dataset.z === 'out' ? 1 / 1.6 : 0); });
+$('#spendctl').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; spendFilter = b.dataset.s; store.set('spendFilter', spendFilter); document.querySelectorAll('#spendctl button').forEach(x => x.classList.toggle('on', x === b)); renderView(); });
+document.querySelectorAll('#spendctl button').forEach(x => x.classList.toggle('on', x.dataset.s === spendFilter));
+$('#marketctl').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; marketSrc = b.dataset.src; store.set('marketSrc', marketSrc); document.querySelectorAll('#marketctl button').forEach(x => x.classList.toggle('on', x === b)); renderView(); });
+document.querySelectorAll('#marketctl button').forEach(x => x.classList.toggle('on', x.dataset.src === marketSrc));
+const hexIsTiles = () => mapLayer === 'senate' || mapLayer === 'governor';
+function renderTiles() {
+  if (mapMode === 'spend' && SPEND) {
+    const senateStates = new Set((SEATS ? SEATS.senate : []).map(r => r.state));
+    stateSpendScale = spendScale(Object.keys(SPEND.states).filter(st => mapLayer !== 'senate' || senateStates.has(st)).map(st => spendValue(spendBucket(st))));
+  } else stateSpendScale = spendScale([1]);
+  const list = mapLayer === 'senate' ? (SEATS ? SEATS.senate : []) : (SEATS ? SEATS.governor : []);
+  const byState = {}; for (const r of list) (byState[r.state] = byState[r.state] || []).push(r);
+  const labelFor = st => {
+    const rs = byState[st]; if (!rs || !rs.length) return '';
+    const r = rs[0];
+    if (mapMode === 'markets') { const m = marketProb(`${st}-${mapLayer === 'senate' ? 'Sen' : 'Gov'}`); return m && m.v !== null && m.v !== undefined ? (m.v >= 50 ? 'D ' + Math.round(m.v) : 'R ' + Math.round(100 - m.v)) : ''; }
+    if (r.winnerParty) return `${r.winnerParty} ✓`;
+    if (r.totalVotes && r.leaderParty) return `${r.leaderParty} ${isFinite(r.eevp) ? r.eevp + '%' : ''}`;
+    return rs.length > 1 ? `${rs.length} races` : (RATING_LABEL[r.rating] || '').replace('Likely', 'Lkly').replace('Toss-up', 'Toss') || '';
+  };
+  const svg = tileGridSVG({ title: `${mapLayer} tile map`, fill: st => fillFor(stateData(st), st), label: labelFor, cls: st => byState[st] ? 'has' : 'none' });
+  $('#hex').innerHTML = `<div class="legend"><span>${list.length} ${mapLayer === 'senate' ? 'Senate' : 'governor'} races · one tile per state · click a tile for the race</span></div>${svg}${legendFor('state')}`;
+  attachZoom('hex');
+  $('#viewmeta').textContent = `${mapLayer} tiles · ${mapMode}${mapMode === 'spend' ? ' · ' + spendFilter : ''}`;
+}
+async function renderHex() {
+  if (!S) return;
+  if (hexIsTiles()) return renderTiles();
+  await loadHex();
+  if (!HEX) { $('#hex').innerHTML = `<div class="muted" style="padding:20px">Seat cartogram not available yet (${esc(hexErr || 'loading')}). Expected at /vendor/hexmap.json.</div>`; return; }
+  const W = 975, H = 560;
+  const fc = { type: 'FeatureCollection', features: HEX };
+  const proj = d3.geoIdentity().reflectY(HEX_REFLECT_Y).fitExtent([[4, 4], [W - 4, H - 4]], fc);
+  const hp = d3.geoPath(proj);
+  prepDistrictSpendScale();
+  const paths = HEX.map(f => `<path class="d" d="${hp(f)}" fill="${fillForDistrict(featId(f))}" data-id="${esc(featId(f))}"></path>`).join('');
+  const outline = HEXSTATES ? HEXSTATES.map(f => `<path class="outline" d="${hp(f)}"></path>`).join('') : '';
+  const labels = HEXSTATES ? HEXSTATES.map(f => { const c = hp.centroid(f); return isNaN(c[0]) ? '' : `<text x="${c[0].toFixed(1)}" y="${c[1].toFixed(1)}" fill="var(--ink)" font-size="10" text-anchor="middle" dominant-baseline="middle" pointer-events="none" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(featId(f))}</text>`; }).join('') : '';
+  // "D needs X of the Y remaining" line, from the same classification as the seat strips
+  const cnt = { D: 0, R: 0, lD: 0, lR: 0, U: 0, O: 0 }; for (const r of SEATS ? SEATS.house : []) cnt[classify(r)] = (cnt[classify(r)] || 0) + 1;
+  const remaining = 435 - cnt.D - cnt.R - cnt.O, needD = Math.max(0, 218 - cnt.D), needR = Math.max(0, 218 - cnt.R);
+  const needLine = `<div class="legend"><span><b class="d">${cnt.D}</b> called D · leading <span class="d">${cnt.lD}</span></span><span><b class="r">${cnt.R}</b> called R · leading <span class="r">${cnt.lR}</span></span><span>${remaining} remaining · <span class="d">D needs ${needD} of ${remaining}</span> · <span class="r">R needs ${needR} of ${remaining}</span>${cnt.D >= 218 ? ' · <b class="d">D MAJORITY</b>' : cnt.R >= 218 ? ' · <b class="r">R MAJORITY</b>' : ''}</span></div>`;
+  $('#hex').innerHTML = `${needLine}<svg viewBox="0 0 ${W} ${H}"><g class="zl">${paths}${outline}${labels}</g></svg>${districtLegend()}`;
+  attachZoom('hex');
+  $('#viewmeta').textContent = `one square per House seat · ${mapMode}${mapMode === 'spend' ? ' · ' + spendFilter : ''}`;
+}
+const HEX_REFLECT_Y = false;
+
+async function renderMap() {
+  try { await loadTopo(); } catch (e) { $('#map').innerHTML = `<span class="under">map geometry failed to load: ${esc(e.message)}</span>`; return; }
+  if (mapLayer === 'districts') return renderDistrictMap();
+  if (mapMode === 'spend' && SPEND) {
+    const senateStates = new Set((SEATS ? SEATS.senate : []).map(r => r.state));
+    stateSpendScale = spendScale(Object.keys(SPEND.states).filter(st => mapLayer !== 'senate' || senateStates.has(st)).map(st => spendValue(spendBucket(st))));
+  } else stateSpendScale = spendScale([1]);
+  const paths = geoFeatures.map(f => {
+    const st = FIPS_STATE[String(f.id).padStart(2, '0')]; if (!st) return '';
+    const sd = stateData(st);
+    return `<path d="${pathGen(f)}" fill="${fillFor(sd, st)}" data-st="${st}"></path>`;
+  }).join('');
+  $('#map').innerHTML = `<svg viewBox="0 0 975 610"><g class="zl">${paths}</g></svg>${legendFor('state')}`;
+  attachZoom('map');
+  $('#viewmeta').textContent = `${mapLayer} · ${mapMode}${mapMode === 'spend' ? ' · ' + spendFilter : ''}${mapMode === 'markets' ? ' · ' + marketSrc + (SEATS && SEATS.marketsUpdatedAt ? ' · odds ' + ago(SEATS.marketsUpdatedAt) : '') : ''}${S.polls && S.polls.updatedAt ? ' · polls ' + ago(S.polls.updatedAt) : ''}`;
+}
+const tip = $('#tip');
+function placeTip(e) {
+  tip.style.display = 'block';
+  const x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, window.innerHeight - tip.offsetHeight - 8);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function districtHover(e) {
+  const p = e.target.closest && e.target.closest('path.d'); if (!p) { tip.style.display = 'none'; return; }
+  const id = p.dataset.id;
+  tip.innerHTML = `<div class="t">${esc(id)} · House</div>` + districtTipLines(id).map(l => `<div class="m">${esc(l)}</div>`).join('');
+  placeTip(e);
+}
+$('#hex').addEventListener('mousemove', e => hexIsTiles() ? stateHover(e) : districtHover(e));
+$('#hex').addEventListener('mouseleave', () => tip.style.display = 'none');
+$('#hex').addEventListener('click', e => { const g = e.target.closest && e.target.closest('.tile[data-st]'); if (g && hexIsTiles() && window.openRaceModal) openRaceModal(`${g.dataset.st}-${mapLayer === 'senate' ? 'Sen' : 'Gov'}`); });
+$('#map').addEventListener('mousemove', e => mapLayer === 'districts' ? districtHover(e) : stateHover(e));
+function stateHover(e) {
+  const p = e.target.closest && e.target.closest('[data-st]'); if (!p || !p.dataset.st) { tip.style.display = 'none'; return; }
+  const st = p.dataset.st, sd = stateData(st);
+  const b = spendBucket(st);
+  const spendLines = b && b.total ? [`spend D ${fmtUSD(b.totalD)} (cand ${fmtUSD(b.candD)} + outside ${fmtUSD(b.ieD)})`, `spend R ${fmtUSD(b.totalR)} (cand ${fmtUSD(b.candR)} + outside ${fmtUSD(b.ieR)})`] : [];
+  const lines = mapMode === 'spend' ? spendLines.concat(sd.lines) : sd.lines.concat(spendLines);
+  tip.innerHTML = `<div class="t">${st} · ${mapLayer === 'house' ? 'House' : mapLayer === 'senate' ? 'Senate' : 'Governor'}</div>` + (lines.length ? lines.map(l => `<div class="m">${esc(l)}</div>`).join('') : '<div class="m">no race</div>');
+  placeTip(e);
+}
+$('#map').addEventListener('mouseleave', () => tip.style.display = 'none');
+
+// ------------------------------------------------------------ render: polls panel, log, links, embed
+// ------------------------------------------------------------ event feed, tape, sounds, flashes, catch-up
+const EV = { list: [], seq: 0, seen: false, filter: store.get('feed:filter') || 'all', unread: 0, lastFocus: Date.now(), awayAt: null, recent: new Map() };
+const EV_RANK = { control: 0, flip: 1, call: 2, cross: 3, lead: 4, first: 5, odds: 6, snapshot: 9 };
+const evTime = t => new Date(t).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' });
+const evMatches = e => EV.filter === 'all' ? e.type !== 'snapshot' : EV.filter === 'bell' ? (e.type === 'cross' || e.type === 'first' || (S && S.config.races.some(r => r.id === e.id))) : e.type === EV.filter || (EV.filter === 'call' && e.type === 'control');
+function evHtml(e, isNew) {
+  const cls = e.party === 'D' || e.party === 'R' || e.party === 'O' ? e.party : '';
+  const tag = e.type === 'flip' ? '' : e.flip ? '<span class="tag flip">FLIP</span>' : e.type === 'lead' ? '<span class="tag">lead</span>' : e.type === 'cross' ? `<span class="tag ${e.meta && e.meta.over >= 0 ? 'over' : 'under'}">vs '24</span>` : e.type === 'odds' ? '<span class="tag">odds</span>' : e.type === 'first' ? '<span class="tag">first votes</span>' : e.type === 'runoff' ? '<span class="tag">runoff</span>' : e.quiet ? '<span class="tag">safe seat</span>' : e.type === 'game' ? '<span class="tag">game</span>' : '';
+  const link = e.id && /^[A-Z]{2}-/.test(e.id) ? `<a data-id="${esc(e.id)}">${esc(e.id)}</a>` : '';
+  return `<div class="ev ${e.type}${isNew ? ' new' : ''}"><span class="t num">${evTime(e.t)}</span><span class="sq ${cls}"></span><span class="x">${esc(e.text)}${tag}</span>${link}</div>`;
+}
+function renderFeed(newIds = new Set()) {
+  const rows = EV.list.filter(evMatches).slice(0, 300);
+  $('#polls').innerHTML = rows.length ? rows.map(e => evHtml(e, newIds.has(e.seq))).join('') : `<div class="empty muted">${EV.filter === 'all' ? 'Waiting for the first call. Calls, flips, lead changes, bellwether crossings and big odds moves land here.' : 'nothing yet'}</div>`;
+  const n = { call: 0, flip: 0, lead: 0, cross: 0, odds: 0 };
+  for (const e of EV.list) if (n[e.type] !== undefined) n[e.type]++;
+  $('#feedmeta').textContent = `${n.call} calls · ${n.flip} flips · ${n.lead} leads · ${n.cross} crossings · ${n.odds} odds moves${EV.unread ? ` · ${EV.unread} new` : ''}`;
+}
+$('#feedfilters').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; EV.filter = b.dataset.f; store.set('feed:filter', EV.filter); document.querySelectorAll('#feedfilters button').forEach(x => x.classList.toggle('on', x === b)); renderFeed(); });
+document.querySelectorAll('#feedfilters button').forEach(x => x.classList.toggle('on', x.dataset.f === EV.filter));
+$('#polls').addEventListener('click', e => { const a = e.target.closest('a[data-id]'); if (a && window.openRaceModal) openRaceModal(a.dataset.id); });
+async function pullEvents() {
+  try {
+    const r = await fetch(`/api/events?since=${EV.seq}`, { cache: 'no-store' }); if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json(); if (!j.events.length) { EV.seq = j.seq; return; }
+    const fresh = j.events.filter(e => e.seq > EV.seq); EV.seq = j.seq;
+    EV.list = fresh.concat(EV.list).slice(0, 5000);
+    if (!EV.seen) { EV.seen = true; renderFeed(); if (tapeOn) renderTape(); return; }       // first load: history, no sounds
+    const ids = new Set(fresh.map(e => e.seq));
+    for (const e of fresh) { if (e.id) EV.recent.set(e.id, { t: Date.now(), party: e.party }); }
+    if (document.hidden || !document.hasFocus()) EV.unread += fresh.filter(e => e.type !== 'snapshot').length;
+    renderFeed(ids); renderTape(); chimeFor(fresh); renderRaces();
+  } catch (e) { if (Date.now() - (pullEvents.err || 0) > 60000) { pullEvents.err = Date.now(); clientError('feed', e.message); } }
+}
+window.rowClass = id => { const r = EV.recent.get(id); if (!r || Date.now() - r.t > 90000) return ''; return r.party === 'R' ? 'flash-r' : 'flash-d'; };
+// tape
+let tapeOn = store.get('tape:on') === null ? true : !!store.get('tape:on'), tapeAuto = false;   // on by default: it's the odds ticker
+function setTape(on) { tapeOn = on; store.set('tape:on', on); $('#tapebtn').classList.toggle('on', on); $('#tape').style.display = on ? 'block' : 'none'; document.body.classList.toggle('has-tape', on); requestAnimationFrame(() => { if (typeof fitEmbed === 'function') fitEmbed(); if (S) renderView(); }); }
+$('#tapebtn').addEventListener('click', () => setTape(!tapeOn));
+// odds ticker: every market that moved on its last tick (from /api/history), newest first
+let HIST = null;
+async function pullHistory() {
+  try { const r = await fetch('/api/history', { cache: 'no-store' }); if (!r.ok) throw new Error('HTTP ' + r.status); HIST = await r.json(); if (tapeOn) renderTape(); }
+  catch (e) { if (Date.now() - (pullHistory.err || 0) > 60000) { pullHistory.err = Date.now(); clientError('page', '/api/history: ' + e.message); } }
+}
+setInterval(pullHistory, 30000); setTimeout(pullHistory, 2500);
+function oddsTicks() {
+  if (!HIST) return [];
+  const avg = p => (p[1] !== null && p[2] !== null) ? (p[1] + p[2]) / 2 : (p[1] ?? p[2]);
+  const out = [];
+  for (const [id, h] of Object.entries(HIST.races || {})) {
+    if (h.length < 2) continue;
+    const a = h[h.length - 2], b = h[h.length - 1], va = avg(a), vb = avg(b);
+    if (va === null || vb === null || va === undefined || vb === undefined) continue;
+    const d = vb - va; if (Math.abs(d) < 0.25) continue;
+    out.push({ id, t: b[0], now: vb, d });
+  }
+  const C = HIST.control || [];
+  if (C.length >= 2) {
+    const a = C[C.length - 2], b = C[C.length - 1];
+    for (const [key, lab] of [['H', 'HOUSE'], ['S', 'SENATE']]) {
+      const av = x => (x['k' + key] !== null && x['p' + key] !== null) ? (x['k' + key] + x['p' + key]) / 2 : (x['k' + key] ?? x['p' + key]);
+      const va = av(a), vb = av(b); if (va === null || vb === null || va === undefined || vb === undefined) continue;
+      const d = vb - va; if (Math.abs(d) >= 0.1) out.push({ id: lab, t: b.t, now: vb, d, control: true });
+    }
+  }
+  return out.sort((p, q) => q.t - p.t || Math.abs(q.d) - Math.abs(p.d)).slice(0, 40);
+}
+function renderTape() {
+  const items = EV.list.filter(e => ['call', 'flip', 'lead', 'cross', 'odds', 'control', 'runoff'].includes(e.type) && !e.quiet).slice(0, 25).reverse();   // safe-seat calls stay off the tape
+  if (!tapeOn && items.length && !tapeAuto && EV.seen) { tapeAuto = true; setTape(true); }
+  const ticks = oddsTicks();
+  const favTxt = v => v >= 50 ? `D ${v.toFixed(0)}` : `R ${(100 - v).toFixed(0)}`;
+  const tickHtml = ticks.map(k => `<span class="it tick ${k.d > 0 ? 'D' : 'R'}" data-id="${k.control ? '' : esc(k.id)}" title="${esc(k.id)} · market average moved ${k.d > 0 ? 'toward D' : 'toward R'} on the last tick"><span class="t">${k.control ? '' : evTime(k.t)}</span>${esc(k.id)} ${favTxt(k.now)} ${k.d > 0 ? '▲' : '▼'}${Math.abs(k.d).toFixed(1)}</span>`).join('');
+  const evHtmls = items.map(e => `<span class="it ${e.type === 'control' ? 'control' : e.type === 'cross' ? (e.meta && e.meta.over >= 0 ? 'over' : 'under') : (e.party || '')}" data-id="${esc(e.id || '')}"><span class="t">${evTime(e.t)}</span>${esc(e.text)}</span>`).join('');
+  const lead = tickHtml ? `<span class="it hd">ODDS</span>${tickHtml}` : `<span class="it hd muted">ODDS · no market moved on the last tick</span>`;
+  const html = lead + (evHtmls ? `<span class="it hd">EVENTS</span>${evHtmls}` : '');
+  $('#tapetrack').innerHTML = html + html;   // doubled for a seamless loop
+  $('#tapetrack').style.animationDuration = Math.max(40, (ticks.length + items.length) * 5) + 's';
+}
+$('#tape').addEventListener('click', e => { const it = e.target.closest('.it'); if (it && it.dataset.id && /^[A-Z]{2}-/.test(it.dataset.id) && window.openRaceModal) openRaceModal(it.dataset.id); });
+if (tapeOn) setTape(true);
+// sounds: synthesized, unlocked by the first click
+let audioCtx = null, soundOn = !!store.get('feed:sound');
+function unlockAudio() { try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch {} }
+document.addEventListener('click', unlockAudio, { once: false });
+function tone(freqs, dur = 0.12, gap = 0.08, type = 'sine', vol = 0.12) {
+  if (!audioCtx) return;
+  let t = audioCtx.currentTime + 0.01;
+  for (const f of freqs) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + dur); o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + dur + 0.02); t += dur + gap; }
+}
+function chimeFor(fresh) {
+  if (!soundOn) return;
+  const top = fresh.slice().sort((a, b) => (EV_RANK[a.type] ?? 9) - (EV_RANK[b.type] ?? 9))[0]; if (!top) return;
+  if (top.type === 'control') tone([523, 659, 784, 1047], 0.18, 0.06);
+  else if (top.type === 'flip') tone([440, 554, 659], 0.14, 0.05);
+  else if (top.type === 'call') tone([660, 880], 0.12, 0.05);
+  else if (top.type === 'cross') tone([587], 0.2, 0, 'triangle', 0.08);
+}
+function setSound(on) { soundOn = on; store.set('feed:sound', on); $('#soundbtn').textContent = on ? '🔔 on' : '🔔 off'; $('#soundbtn').classList.toggle('on', on); if (on) { unlockAudio(); tone([660, 880], 0.1, 0.04); } }
+$('#soundbtn').addEventListener('click', () => setSound(!soundOn));
+if (soundOn) { $('#soundbtn').textContent = '🔔 on'; $('#soundbtn').classList.add('on'); }
+// catch-up toast after ≥3 minutes away
+function onAway() { if (!EV.awayAt) EV.awayAt = Date.now(); }
+function onBack() {
+  const away = EV.awayAt ? Date.now() - EV.awayAt : 0; EV.awayAt = null;
+  if (away < 3 * 60e3) return;
+  const since = Date.now() - away, evs = EV.list.filter(e => e.t >= since && e.type !== 'snapshot');
+  EV.unread = 0; renderFeed();
+  if (!evs.length) return;
+  const n = {}; for (const e of evs) n[e.type] = (n[e.type] || 0) + 1;
+  const top = evs.slice().sort((a, b) => (EV_RANK[a.type] ?? 9) - (EV_RANK[b.type] ?? 9)).slice(0, 3);
+  $('#toast').innerHTML = `<div class="h">While you were away (${Math.round(away / 60e3)} min): ${Object.entries(n).map(([k, v]) => `${v} ${k}${v > 1 ? 's' : ''}`).join(' · ')}</div>` + top.map(e => `<div class="l">${esc(e.text)}</div>`).join('');
+  $('#toast').style.display = 'block'; clearTimeout(onBack.timer); onBack.timer = setTimeout(() => $('#toast').style.display = 'none', 12000);
+}
+$('#toast').addEventListener('click', () => { $('#toast').style.display = 'none'; EV.filter = 'all'; document.querySelectorAll('#feedfilters button').forEach(x => x.classList.toggle('on', x.dataset.f === 'all')); renderFeed(); $('#polls').scrollTop = 0; });
+document.addEventListener('visibilitychange', () => document.hidden ? onAway() : onBack());
+window.addEventListener('blur', onAway); window.addEventListener('focus', onBack);
+setInterval(pullEvents, 5000); pullEvents();
+function renderPolls() { /* feed lives here now; generic-ballot polls stay in the top block */ }
+function renderLog() {
+  const errs = ((S && S.errors) || []).concat(clientErrors).sort((a, b) => b.t - a.t).slice(0, 80);
+  $('#log').innerHTML = errs.length ? errs.map(e => `<div class="e"><span class="t num">${new Date(e.t).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false })}</span><span class="s">${esc(e.source)}</span><span>${esc(e.msg)}</span></div>`).join('') : '<div class="empty">no errors</div>';
+}
+let linksDone = false, embedDone = false;
+function renderStatic() {
+  if (!linksDone && S.config.links) { $('#links').innerHTML = S.config.links.map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join(''); linksDone = true; }
+  if (!embedDone && S.config.embeds) { setEmbed(store.get('embed') || 'twitch'); embedDone = true; }
+}
+const phoneMQ = window.matchMedia('(max-width: 900px)');
+const noStream = () => phoneMQ.matches || Q.get('nostream') === '1';
+function setEmbed(which) {
+  const url = S.config.embeds[which]; if (!url) return;
+  if (noStream()) { $('#embed').innerHTML = ''; store.set('embed', which); return; }   // never load the iframe on a phone
+  $('#embed').innerHTML = `<iframe src="${esc(url)}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="" aria-label="${esc(which)} stream"></iframe>`;
+  document.querySelectorAll('#embedtabs button').forEach(b => b.classList.toggle('on', b.dataset.e === which));
+  store.set('embed', which);
+  if (typeof fitEmbed === 'function') requestAnimationFrame(fitEmbed);
+}
+$('#embedtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setEmbed(b.dataset.e); });
+$('#reload').addEventListener('click', () => setEmbed(store.get('embed') || 'twitch'));
+$('#refresh').addEventListener('click', async () => { try { await fetch('/api/refresh'); } catch {} setTimeout(() => { pullState(); pullSeats(); }, 4000); });
+
+// ------------------------------------------------------------ views
+function gameVisible() { const g = $('#game'); return !!(g && g.offsetParent !== null && !document.hidden); }
+function showGame(on = true) {
+  if (document.body.classList.contains('phone')) { if (on) setMPage('game'); return; }
+  document.body.classList.toggle('gameopen', on); $('#gamebtn').classList.toggle('on', on);
+  if (on) renderGameNow();
+}
+window.showGame = showGame;
+function renderGameNow() { if (!window.renderGame) return; try { renderGame($('#game')); } catch (e) { clientError('game', e.message); } }
+$('#gamebtn').addEventListener('click', () => showGame(!document.body.classList.contains('gameopen')));
+$('#gameclose').addEventListener('click', () => showGame(false));
+$('#gamejoin').addEventListener('click', () => { if (window.openOnboarding) openOnboarding(); });
+setInterval(() => { const me = store.get('game:me'); $('#gamejoin').textContent = me && me.id ? 'Edit my entry' : 'Join the game'; }, 2000);
+setInterval(() => { if (gameVisible()) renderGameNow(); }, 15000);
+function setView(v) {
+  if (v === 'game') { showGame(true); v = store.get('view') === 'game' ? 'seats' : (store.get('view') || 'seats'); if (v === 'game') v = 'seats'; }
+  view = v; store.set('view', v);
+  document.querySelectorAll('#viewtabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  for (const id of ['seats', 'map', 'hex', 'watch', 'movers']) $('#' + id).style.display = v === id ? '' : 'none';
+  $('#maplayers').classList.toggle('ghost', !(v === 'map' || v === 'hex'));
+  $('#mapmodes').classList.toggle('ghost', !(v === 'map' || v === 'hex'));
+  $('#zoomctl').classList.toggle('ghost', !(v === 'map' || v === 'hex'));
+  $('#viewbody').classList.toggle('fill', v === 'map' || v === 'hex');
+  if (v === 'movers' && window.moversRefresh) { try { moversRefresh(); } catch {} }
+  renderView();
+}
+let lastMapKey = '';
+function renderView(force) {
+  if (!S) return;
+  // sub-filters share one slot in the fixed-height row, so showing one never moves anything
+  const mapish = view === 'map' || view === 'hex';
+  // maps re-render only when something they draw has changed, so a pan or hover isn't cut off every 5 s
+  if (mapish && force !== true) {
+    const key = [view, mapLayer, mapMode, spendFilter, marketSrc, S.nyt.updatedAt, SEATS && SEATS.updatedAt, SEATS && SEATS.marketsUpdatedAt, S.polls && S.polls.updatedAt, SPEND ? 1 : 0, S.kalshi.updatedAt, document.documentElement.style.getPropertyValue('--ui'), document.body.classList.contains('theater')].join('|');
+    if (key === lastMapKey && $('#' + view).querySelector('svg')) return;
+    lastMapKey = key;
+  }
+  $('#spendctl').classList.toggle('ghost', !(mapish && mapMode === 'spend'));
+  $('#marketctl').classList.toggle('ghost', !(mapish && mapMode === 'markets'));
+  if (view === 'seats') renderSeats();
+  else if (view === 'hex') renderHex();
+  else if (view === 'watch') { if (window.renderWatch) { try { renderWatch($('#watch')); } catch (e) { clientError('watch', e.message); } } else $('#watch').innerHTML = '<div class="muted" style="padding:20px">watch.js not loaded</div>'; }
+  else if (view === 'movers') { if (window.renderMovers) { try { renderMovers($('#movers')); } catch (e) { clientError('movers', e.message); } } else $('#movers').innerHTML = '<div class="muted" style="padding:20px">movers.js not loaded</div>'; }
+  else renderMap();
+}
+setInterval(() => { if (!S) return; if ((view === 'watch' && window.renderWatch) || (view === 'movers' && window.renderMovers)) renderView(); }, 15000);
+$('#viewtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(b.dataset.v); });
+$('#maplayers').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; mapLayer = b.dataset.l; store.set('mapLayer', mapLayer); document.querySelectorAll('#maplayers button').forEach(x => x.classList.toggle('on', x === b)); if (view === 'hex') renderView(true); else renderMap(); });
+$('#mapmodes').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; mapMode = b.dataset.m; store.set('mapMode', mapMode); document.querySelectorAll('#mapmodes button').forEach(x => x.classList.toggle('on', x === b)); renderView(); });
+document.querySelectorAll('#maplayers button').forEach(x => x.classList.toggle('on', x.dataset.l === mapLayer));
+document.querySelectorAll('#mapmodes button').forEach(x => x.classList.toggle('on', x.dataset.m === mapMode));
+
+// theater strip under the stream: the same numbers as the top bar, one row
+function renderKeyFigs() {
+  if (!document.body.classList.contains('theater')) return;
+  const cell = (name, key) => {
+    const k = S.kalshi.control[key], p = S.polymarket.control[key], n = S.nyt.control && S.nyt.control[key];
+    const kD = k ? k.pD : null, pD = p ? p.pD : null, ref = kD ?? pD, favD = ref === null ? true : ref >= 50, cls = favD ? 'd' : 'r';
+    const show = v => v === null || v === undefined ? '—' : (favD ? v : 100 - v).toFixed(1);
+    const avg = (kD !== null && pD !== null) ? (kD + pD) / 2 : (kD ?? pD);
+    return `<div class="cell"><span class="lab">${name} <b>${favD ? 'DEM' : 'GOP'}</b></span>
+      <span class="n num ${cls}">${show(avg)}<small>%</small></span>
+      <span class="sub">K ${show(kD)} · P ${show(pD)}<br>spread ${kD !== null && pD !== null ? Math.abs(kD - pD).toFixed(1) : '—'}</span><span></span><span></span>
+      ${n ? seatBar(key, n) : ''}</div>`;
+  };
+  const P = projection(), gb = S.polls && S.polls.genericBallot;
+  const pm = gb && gb.margin !== null && gb.margin !== undefined ? gb.margin : null;
+  const bigM = v => v === null ? '<span class="muted">—</span>' : `<span class="${v >= 0 ? 'd' : 'r'}">${v >= 0 ? 'D' : 'R'}${Math.abs(v).toFixed(1)}</span>`;
+  const favLabel = (P.proj ?? pm);
+  $('#keyfigs').innerHTML = cell('HOUSE', 'house') + cell('SENATE', 'senate') +
+    `<div class="cell"><span class="lab">GENERIC BALLOT <b>${favLabel === null ? '' : favLabel >= 0 ? 'DEM' : 'GOP'}</b></span>
+      <span class="n num">${bigM(P.proj)}<small>PROJ</small></span><span class="n num">${bigM(pm)}<small>POLLS</small></span>
+      <span class="sub">${P.proj !== null && pm !== null ? 'spread ' + Math.abs(P.proj - pm).toFixed(1) : (P.n ? '' : 'waiting for votes')}</span><span></span>
+      <div class="seats"><span class="muted">${P.swing === null ? `'24 ${fmtM(NAT_2024)} · projection = '24 + bellwether swing` : `swing vs '24 ${fmtOver(P.swing)} · ${P.n} race${P.n === 1 ? '' : 's'} · '24 ${fmtM(NAT_2024)}`}${gb ? ` · ${gb.n} polls` : ''}</span></div></div>`;
+}
+function placeLinks(theater) {
+  const links = $('#links'), fh = $('#pollshdr'), fp = $('#polls'); if (!links) return;
+  if (theater) { $('#left').appendChild(fh); $('#left').appendChild(fp); $('#left').appendChild(links); }
+  else { $('#right').insertBefore(links, $('#rz-polls')); $('#right').insertBefore(fh, $('#rz-polls')); $('#right').insertBefore(fp, $('#rz-polls')); $('#right').insertBefore(links, fh); }
+}
+// in theater the iframe keeps 16:9 inside whatever space is left above the strip
+function fitEmbed() {
+  const box = $('#embed'), f = box.querySelector('iframe'); if (!f) return;
+  if (!document.body.classList.contains('theater')) { f.style.width = ''; f.style.height = ''; return; }
+  const cw = box.clientWidth, ch = box.clientHeight;
+  const w = Math.min(cw, ch * 16 / 9), h = w * 9 / 16;
+  f.style.width = Math.floor(w) + 'px'; f.style.height = Math.floor(h) + 'px';
+}
+new ResizeObserver(fitEmbed).observe($('#embed'));
+// crossing the phone breakpoint either way: load or drop the stream
+let wasNoStream = noStream();
+window.addEventListener('resize', () => { const now = noStream(); if (now !== wasNoStream) { wasNoStream = now; if (S) setEmbed(store.get('embed') || 'twitch'); } });
+// phone pages: one section at a time, bottom tab bar
+const MPAGES = ['game', 'odds', 'races', 'map', 'feed'];
+let mpage = Q.get('page') || store.get('mpage') || 'odds';
+function setMPage(p) {
+  if (!MPAGES.includes(p)) p = 'odds';
+  mpage = p; store.set('mpage', p); document.body.dataset.mpage = p;
+  document.querySelectorAll('#mnav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  if (!S) return;
+  if (p === 'map') renderView(true);
+  else if (p === 'game') renderGameNow();
+  else if (p === 'races') renderRaces();
+}
+$('#mnav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMPage(b.dataset.p); });
+function applyPhone() {
+  const on = phoneMQ.matches, was = document.body.classList.contains('phone');
+  document.body.classList.toggle('phone', on);
+  if (on) { if (document.body.classList.contains('theater')) setTheater(false); setMPage(mpage); }
+  else { delete document.body.dataset.mpage; }
+  if (on !== was) { renderHead(); if (S) renderRaces(); }
+}
+phoneMQ.addEventListener('change', applyPhone);
+function setTheater(on) {
+  if (on && document.body.classList.contains('phone')) on = false;
+  document.body.classList.toggle('theater', on); store.set('theater', on);
+  $('#theater').classList.toggle('on', on);
+  placeLinks(on);
+  if (typeof renderHead === 'function') renderHead();
+  if (S) { renderKeyFigs(); renderRaces(); renderView(); }
+  requestAnimationFrame(fitEmbed);
+}
+$('#theater').addEventListener('click', () => setTheater(!document.body.classList.contains('theater')));
+// text size: one factor scales every font size on the page and in the modal (good for a TV)
+function setUi(v) {
+  v = Math.round(Math.max(0.8, Math.min(1.8, v)) * 20) / 20;
+  document.documentElement.style.setProperty('--ui', v); store.set('ui', v);
+  $('#uictl').title = `text ${Math.round(v * 100)}%`;
+  requestAnimationFrame(() => { if (typeof fitEmbed === 'function') fitEmbed(); if (S) renderView(); });
+}
+$('#uictl').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui')) || 1;
+  setUi(b.dataset.ui === '+' ? cur + 0.1 : b.dataset.ui === '-' ? cur - 0.1 : 1);
+});
+{ const saved = store.get('ui'); const q = parseFloat(Q.get('ui')); if (!isNaN(q)) setUi(q); else if (saved) setUi(saved); }
+
+// full screen: standard API with the WebKit-prefixed fallback Safari still uses
+function toggleFullscreen() {
+  const d = document, el = d.documentElement;
+  const active = d.fullscreenElement || d.webkitFullscreenElement;
+  try {
+    if (active) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+    else (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  } catch (e) { clientError('page', 'full screen: ' + e.message); }
+}
+$('#fullscreen').addEventListener('click', toggleFullscreen);
+for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => { $('#fullscreen').classList.toggle('on', !!(document.fullscreenElement || document.webkitFullscreenElement)); requestAnimationFrame(fitEmbed); });
+document.addEventListener('keydown', e => {
+  if (e.target.closest && (e.target.closest('[contenteditable]') || e.target.closest('input, textarea, select'))) return;
+  if (e.key === 't') setTheater(!document.body.classList.contains('theater'));
+  if (e.key === 'g') showGame(!document.body.classList.contains('gameopen'));
+  if (e.key === 'Escape' && document.body.classList.contains('gameopen')) showGame(false);
+  if (e.key === 'f') toggleFullscreen();
+});
+
+// ------------------------------------------------------------ resizable regions
+// Each handle sets one CSS variable on :root (px) and persists it. Double-click resets.
+const RZ = {
+  'rz-cols':  { axis: 'x', get: () => $('#left').getBoundingClientRect().width, min: 240, maxFn: () => window.innerWidth - 260, cssVar: () => '--left-w', key: () => 'rz:left-w' },
+  'rz-cols-theater': { axis: 'x', get: () => $('#left').getBoundingClientRect().width, min: 120, maxFn: () => window.innerWidth - 240, cssVar: () => '--side-w', key: () => 'rz:side-w', invert: true },
+  'rz-races': { axis: 'y', get: () => $('#racewrap').getBoundingClientRect().height, min: 80, maxFn: () => $('#left').getBoundingClientRect().height - 90, cssVar: () => '--races-h', key: () => 'rz:races-h' },
+  'rz-polls': { axis: 'y', get: () => $('#polls').getBoundingClientRect().height, min: 0, maxFn: () => $('#right').getBoundingClientRect().height - 200, cssVar: () => '--polls-h', key: () => 'rz:polls-h' },
+};
+function rzSpec(id) { return id === 'rz-cols' && document.body.classList.contains('theater') ? RZ['rz-cols-theater'] : RZ[id]; }
+function applySavedSizes() {
+  for (const [v, k] of [['--left-w', 'rz:left-w'], ['--races-h', 'rz:races-h'], ['--polls-h', 'rz:polls-h'], ['--side-w', 'rz:side-w']]) {
+    const px = store.get(k); if (px !== null) document.documentElement.style.setProperty(v, px + 'px');
+  }
+}
+document.querySelectorAll('.rz').forEach(h => {
+  h.addEventListener('pointerdown', e => {
+    const spec = rzSpec(h.id); if (!spec) return;
+    e.preventDefault(); h.setPointerCapture(e.pointerId); h.classList.add('active'); document.body.classList.add('resizing');
+    const start = spec.axis === 'x' ? e.clientX : e.clientY, size0 = spec.get();
+    const move = ev => {
+      const d = (spec.axis === 'x' ? ev.clientX : ev.clientY) - start;
+      const px = Math.max(spec.min, Math.min(spec.maxFn(), size0 + (spec.invert ? -d : d)));
+      document.documentElement.style.setProperty(spec.cssVar(), px + 'px');
+    };
+    const up = () => {
+      h.classList.remove('active'); document.body.classList.remove('resizing');
+      h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
+      const cur = parseFloat(document.documentElement.style.getPropertyValue(spec.cssVar())); if (!isNaN(cur)) store.set(spec.key(), Math.round(cur));
+      if (view === 'map') renderMap();
+    };
+    h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+  });
+  h.addEventListener('dblclick', () => { const spec = rzSpec(h.id); if (!spec) return; document.documentElement.style.removeProperty(spec.cssVar()); store.set(spec.key(), null); });
+});
+applySavedSizes();
+
+// table columns: drag the handle on a header cell. Widths are stored by header
+// label so they survive reordering and theater mode hiding some columns.
+const raceTable = $('#races table');
+const visibleThs = () => Array.from(raceTable.querySelectorAll('thead th')).filter(th => th.offsetParent !== null);
+const thLabel = th => th.firstChild.textContent.trim();
+function applyColWidths() {
+  const saved = store.get('rz:colw');
+  const ths = Array.from(raceTable.querySelectorAll('thead th'));
+  if (!saved) { raceTable.classList.remove('fixed'); raceTable.style.width = ''; ths.forEach(th => th.style.width = ''); return; }
+  raceTable.classList.add('fixed');
+  let sum = 0;
+  for (const th of visibleThs()) { const w = saved[thLabel(th)]; if (w) { th.style.width = w + 'px'; sum += w; } else { th.style.width = ''; sum += th.getBoundingClientRect().width || 80; } }
+  raceTable.style.width = Math.round(sum) + 'px';
+}
+raceTable.addEventListener('pointerdown', e => {
+  const h = e.target.closest && e.target.closest('.cr'); if (!h) return;
+  e.preventDefault(); e.stopPropagation();
+  const th = h.parentElement, ths = visibleThs();
+  const widths = new Map(ths.map(t => [t, t.getBoundingClientRect().width]));
+  ths.forEach(t => t.style.width = widths.get(t) + 'px');
+  raceTable.classList.add('fixed');
+  const x0 = e.clientX, w0 = widths.get(th);
+  h.setPointerCapture(e.pointerId); h.classList.add('active'); document.body.classList.add('resizing');
+  const move = ev => {
+    const w = Math.max(28, w0 + ev.clientX - x0);
+    widths.set(th, w); th.style.width = w + 'px';
+    raceTable.style.width = Math.round(Array.from(widths.values()).reduce((a, b) => a + b, 0)) + 'px';
+  };
+  const up = () => {
+    h.classList.remove('active'); document.body.classList.remove('resizing'); colDragged = true; setTimeout(() => colDragged = false, 50);
+    h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
+    const saved = store.get('rz:colw') || {};
+    for (const [t, w] of widths) saved[thLabel(t)] = Math.round(w);
+    store.set('rz:colw', saved);
+  };
+  h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+});
+// double-click a handle: fit the column to its widest cell (measured off-screen, so clipped text counts)
+raceTable.addEventListener('dblclick', e => {
+  const h = e.target.closest && e.target.closest('.cr'); if (!h) return;
+  e.stopPropagation();
+  const th = h.parentElement, ths = visibleThs(), idx = ths.indexOf(th);
+  const probe = document.createElement('div'); probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0'; probe.style.font = getComputedStyle(th).font; document.body.appendChild(probe);
+  let w = 0;
+  probe.innerHTML = th.querySelector('.hl').textContent; w = Math.max(w, probe.offsetWidth + 14);
+  for (const tr of raceTable.querySelectorAll('tbody tr')) { const td = tr.children[idx]; if (!td) continue; probe.innerHTML = td.innerHTML; w = Math.max(w, probe.offsetWidth); }
+  probe.remove();
+  const pad = 2 * parseFloat(getComputedStyle(th).paddingLeft || 8) + 4;
+  const widths = new Map(ths.map(t => [t, t.getBoundingClientRect().width])); widths.set(th, Math.max(28, Math.ceil(w + pad)));
+  raceTable.classList.add('fixed'); ths.forEach(t => t.style.width = widths.get(t) + 'px');
+  raceTable.style.width = Math.round(Array.from(widths.values()).reduce((a, b) => a + b, 0)) + 'px';
+  const saved = store.get('rz:colw') || {}; for (const [t, ww] of widths) saved[thLabel(t)] = Math.round(ww); store.set('rz:colw', saved);
+});
+renderHead();
+applyColWidths();
+if (store.get('theater') || Q.get('theater') === '1') setTheater(true);
+
+// named setups: every en26:* preference except per-race edits and the game identity, saved to the server
+function collectPrefs() { const out = {}; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith('en26:') && !k.startsWith('en26:edit:') && k !== 'en26:game:me') out[k] = localStorage.getItem(k); } } catch {} return out; }
+$('#savesetup').addEventListener('click', async () => {
+  const name = (prompt('Name for this setup (letters, numbers, dashes). Load it on any device with ?setup=name', store.get('setupName') || 'tv') || '').replace(/[^\w-]/g, '');
+  if (!name) return;
+  try { const r = await fetch('/api/setup?name=' + encodeURIComponent(name), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prefs: collectPrefs() }) }); if (!r.ok) throw new Error('HTTP ' + r.status); store.set('setupName', name); $('#savesetup').textContent = 'Saved ' + name; setTimeout(() => $('#savesetup').textContent = 'Save setup', 2500); }
+  catch (e) { clientError('page', 'save setup: ' + e.message); }
+});
+if (Q.get('setup')) (async () => {
+  try { const r = await fetch('/api/setup?name=' + encodeURIComponent(Q.get('setup'))); if (!r.ok) throw new Error('no setup named ' + Q.get('setup')); const j = await r.json();
+    for (const [k, v] of Object.entries(j.prefs || {})) localStorage.setItem(k, v);
+    location.replace(location.pathname + location.search.replace(/[?&]setup=[^&]*/, '').replace(/^&/, '?'));
+  } catch (e) { clientError('page', e.message); }
+})();
+$('#resetlayout').addEventListener('click', () => {
+  for (const k of ['rz:left-w', 'rz:races-h', 'rz:polls-h', 'rz:side-w', 'rz:colw', 'cols:order', 'cols:hidden:normal', 'cols:hidden:theater', 'cols:hidden:phone']) store.set(k, null);
+  for (const v of ['--left-w', '--races-h', '--polls-h', '--side-w']) document.documentElement.style.removeProperty(v);
+  renderHead(); renderRaces();
+  if (view === 'map') renderMap();
+});
+
+function renderAll() {
+  renderSources();
+  renderKeyFigs();
+  renderChamber('ch-house', 'HOUSE', 'house', ['kH', 'pH']);
+  renderChamber('ch-senate', 'SENATE', 'senate', ['kS', 'pS']);
+  renderGB();
+  renderRaces();
+  renderPolls();
+  renderLog();
+  renderStatic();
+  renderView();
+}
+
+applyPhone();
+setView(view);
+if (openGameAtStart) showGame(true);
+pullState(); pullSeats(); setTimeout(pullSpending, 1500);
+setInterval(pullState, 5000);
+setInterval(pullSeats, 45000);
+setInterval(pullSpending, 30 * 60000);
+</script>
+<script src="/modal.js"></script>
+<script src="/watch.js"></script>
+<script src="/movers.js"></script>
+<script src="/game.js"></script>
+<script src="/onboard.js"></script>
+<script>if (document.body.classList.contains('gameopen') || document.body.dataset.mpage === 'game') renderGameNow();</script>
+</body>
+</html>

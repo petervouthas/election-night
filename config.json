@@ -1,0 +1,254 @@
+{
+  "port": 3000,
+  "pollIntervalMs": 30000,
+  "nytIntervalMs": 60000,
+  "historyHours": 2,
+  "marginPerspective": "D",
+  "control": {
+    "house": {
+      "kalshi": "CONTROLH-2026-D",
+      "polymarketEvent": "which-party-will-win-the-house-in-2026",
+      "nytOffice": "H"
+    },
+    "senate": {
+      "kalshi": "CONTROLS-2026-D",
+      "polymarketEvent": "which-party-will-win-the-senate-in-2026",
+      "nytOffice": "S"
+    }
+  },
+  "races": [
+    {
+      "id": "IN-1",
+      "office": "house",
+      "state": "IN",
+      "pollCloseET": "7:00 PM",
+      "signal": "White working class \u00b7 union",
+      "nyt": "IN-G-H-1-2026-11-03",
+      "kalshi": "HOUSEIN1-26-D",
+      "polymarket": "in-01-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "FL-14",
+      "office": "house",
+      "state": "FL",
+      "pollCloseET": "7:00 PM",
+      "signal": "Hispanic (Tampa) \u00b7 new FL map",
+      "nyt": "FL-G-H-14-2026-11-03",
+      "kalshi": null,
+      "polymarket": "fl-14-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "FL-22",
+      "office": "house",
+      "state": "FL",
+      "pollCloseET": "7:00 PM",
+      "signal": "Seniors \u00b7 S. Fla. suburbs",
+      "nyt": "FL-G-H-22-2026-11-03",
+      "kalshi": null,
+      "polymarket": "fl-22-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "VA-2",
+      "office": "house",
+      "state": "VA",
+      "pollCloseET": "7:00 PM",
+      "signal": "Military \u00b7 federal workers",
+      "nyt": "VA-G-H-2-2026-11-03",
+      "kalshi": "HOUSEVA2-26-D",
+      "polymarket": "va-02-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "VA-7",
+      "office": "house",
+      "state": "VA",
+      "pollCloseET": "7:00 PM",
+      "signal": "Federal workers \u00b7 NoVa exurbs",
+      "nyt": "VA-G-H-7-2026-11-03",
+      "kalshi": "HOUSEVA7-26-D",
+      "polymarket": "va-07-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "GA-Sen",
+      "office": "senate",
+      "state": "GA",
+      "pollCloseET": "7:00 PM",
+      "signal": "Black turnout \u00b7 Atlanta suburbs",
+      "nyt": "GA-G-S-2026-11-03",
+      "kalshi": "SENATEGA-26-D",
+      "polymarket": "georgia-senate-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "NC-1",
+      "office": "house",
+      "state": "NC",
+      "pollCloseET": "7:30 PM",
+      "signal": "Rural Black turnout \u00b7 new NC map",
+      "nyt": "NC-G-H-1-2026-11-03",
+      "kalshi": "HOUSENC1-26-D",
+      "polymarket": "nc-01-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "OH-9",
+      "office": "house",
+      "state": "OH",
+      "pollCloseET": "7:30 PM",
+      "signal": "White working class \u00b7 Rust Belt",
+      "nyt": "OH-G-H-9-2026-11-03",
+      "kalshi": "HOUSEOH9-26-D",
+      "polymarket": "oh-09-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "PA-7",
+      "office": "house",
+      "state": "PA",
+      "pollCloseET": "8:00 PM",
+      "signal": "Latino (Allentown) \u00b7 suburbs",
+      "nyt": "PA-G-H-7-2026-11-03",
+      "kalshi": "HOUSEPA7-26-D",
+      "polymarket": "pa-07-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "PA-8",
+      "office": "house",
+      "state": "PA",
+      "pollCloseET": "8:00 PM",
+      "signal": "White working class \u00b7 Obama-Trump",
+      "nyt": "PA-G-H-8-2026-11-03",
+      "kalshi": "HOUSEPA8-26-D",
+      "polymarket": "pa-08-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "PA-10",
+      "office": "house",
+      "state": "PA",
+      "pollCloseET": "8:00 PM",
+      "signal": "Exurban \u00b7 R-lean suburbs",
+      "nyt": "PA-G-H-10-2026-11-03",
+      "kalshi": "HOUSEPA10-26-D",
+      "polymarket": "pa-10-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "MI-Sen",
+      "office": "senate",
+      "state": "MI",
+      "pollCloseET": "8:00 PM",
+      "signal": "Arab-American \u00b7 young voters",
+      "nyt": "MI-G-S-2026-11-03",
+      "kalshi": "SENATEMI-26-D",
+      "polymarket": "michigan-senate-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "TX-15",
+      "office": "house",
+      "state": "TX",
+      "pollCloseET": "8:00 PM",
+      "signal": "Hispanic (RGV) \u00b7 new TX map",
+      "nyt": "TX-G-H-15-2026-11-03",
+      "kalshi": "HOUSETX15-26-D",
+      "polymarket": "tx-15-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "TX-34",
+      "office": "house",
+      "state": "TX",
+      "pollCloseET": "8:00 PM",
+      "signal": "Hispanic (RGV)",
+      "nyt": "TX-G-H-34-2026-11-03",
+      "kalshi": "HOUSETX34-26-D",
+      "polymarket": "tx-34-house-election-winner",
+      "margin2024": null
+    },
+    {
+      "id": "NY-17",
+      "office": "house",
+      "state": "NY",
+      "pollCloseET": "9:00 PM",
+      "signal": "Affluent suburbs \u00b7 R crossover",
+      "nyt": "NY-G-H-17-2026-11-03",
+      "kalshi": "HOUSENY17-26-D",
+      "polymarket": "ny-17-house-election-winner",
+      "margin2024": null
+    }
+  ],
+  "embeds": {
+    "twitch": "https://player.twitch.tv/?channel=hasanabi&parent=localhost&muted=false",
+    "abc": "https://www.youtube.com/embed/live_stream?channel=UCBi2mrWuNuyYy4gbM6fU18Q&autoplay=0"
+  },
+  "links": [
+    {
+      "label": "DDHQ",
+      "url": "https://decisiondeskhq.com/results/2026/general/"
+    },
+    {
+      "label": "NYT",
+      "url": "https://www.nytimes.com/interactive/2026/11/03/us/elections/results-house.html"
+    },
+    {
+      "label": "AP",
+      "url": "https://apnews.com/projects/election-results-2026/"
+    },
+    {
+      "label": "@Redistrict",
+      "url": "https://x.com/Redistrict"
+    }
+  ],
+  "sources": {
+    "kalshi": "https://api.elections.kalshi.com/trade-api/v2",
+    "polymarket": "https://gamma-api.polymarket.com",
+    "nytHouse": "https://static01.nyt.com/elections-assets/pages/data/2026-11-03/results-house.json",
+    "nytSenate": "https://static01.nyt.com/elections-assets/pages/data/2026-11-03/results-senate.json",
+    "nytGovernor": "https://static01.nyt.com/elections-assets/pages/data/2026-11-03/results-governor.json",
+    "votehub": "https://api.votehub.com/polls",
+    "fecWeball": "https://www.fec.gov/files/bulk-downloads/2026/weball26.zip",
+    "fecIE": "https://www.fec.gov/files/bulk-downloads/2026/independent_expenditure_2026.csv"
+  },
+  "pollsIntervalMs": 600000,
+  "extraMarkets": "competitive",
+  "polymarketSlugOverrides": {
+    "AL-Sen": "alabama-senate-election-winner-154",
+    "AK-1": "ak-al-house-election-winner",
+    "CA-22": "which-party-will-win-the-house-race-for-the-ca-22-seat"
+  },
+  "snapshotTimesET": [
+    "18:00",
+    "00:00"
+  ],
+  "oddsMovePts": 5,
+  "oddsMoveWindowMs": 1800000,
+  "game": {
+    "lockET": "19:00",
+    "lockDate": "2026-11-03",
+    "allowLate": false,
+    "maxPlayers": 200
+  },
+  "priorParty": {
+    "AL-Sen": "R",
+    "IL-Sen": "D",
+    "IA-Sen": "R",
+    "KY-Sen": "R",
+    "LA-Sen": "R",
+    "MI-Sen": "D",
+    "MN-Sen": "D",
+    "MT-Sen": "R",
+    "NH-Sen": "D",
+    "NC-Sen": "R",
+    "OK-Sen": "R",
+    "TX-Sen": "R",
+    "WY-Sen": "R",
+    "FL-Sen": "R",
+    "OH-Sen": "R"
+  }
+}

@@ -1,0 +1,31 @@
+/* odds movers view (movers.js) — all rules scoped to .mv */
+.mv { font-size: calc(12px * var(--ui)); color: var(--ink); }
+.mv .mv-ctl { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 8px; white-space: nowrap; }
+.mv .mv-ctl .spacer { flex: 1; }
+.mv .tabs { display: flex; flex-wrap: nowrap; flex: none; border: 1px solid var(--line2); border-radius: 3px; overflow: hidden; background: var(--panel2); font-size: calc(11px * var(--ui)); }
+.mv .tabs::before { content: attr(data-label); color: var(--ink3); font-size: calc(10px * var(--ui)); letter-spacing: .06em; padding: 0 7px; display: flex; align-items: center; background: var(--panel); border-right: 1px solid var(--line2); }
+.mv .tabs button { white-space: nowrap; padding: 2px 8px; border: 0; border-right: 1px solid var(--line); border-radius: 0; background: transparent; }
+.mv .tabs button:last-child { border-right: 0; }
+.mv .tabs button.on { background: var(--line2); color: var(--ink); }
+.mv .tabs button:disabled { color: var(--ink3); opacity: .45; cursor: not-allowed; }
+.mv .mv-meta { color: var(--ink3); font-size: calc(11px * var(--ui)); }
+.mv .mv-sum { color: var(--ink2); margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mv .mv-sum b { color: var(--ink); font-weight: 500; }
+.mv .mv-sum .lbl { color: var(--ink3); margin-right: 6px; }
+.mv .mv-sum + .mv-tbl { margin-top: 8px; }
+.mv table.mv-tbl { border-collapse: collapse; width: 100%; }
+.mv .mv-tbl th { position: sticky; top: 0; z-index: 1; }
+.mv .mv-tbl td { height: calc(27px * var(--ui)); }
+.mv .mv-tbl td.rank { color: var(--ink3); width: 1%; padding-right: 2px; }
+.mv .mv-tbl td.race a.rid { color: var(--ink); cursor: pointer; font-weight: 500; }
+.mv .mv-tbl td.race a.rid:hover { text-decoration: underline; }
+.mv .mv-tbl td.spk { padding-top: 1px; padding-bottom: 1px; width: 1%; }
+.mv .mv-tbl td.spk svg { display: block; }
+.mv .mv-tbl td.big { font-size: calc(13px * var(--ui)); font-weight: 500; }
+.mv .mv-tbl tr:hover td { background: var(--panel); }
+.mv .tag { display: inline-block; padding: 0 5px; margin-left: 4px; border: 1px solid var(--line2); border-radius: 2px; font-size: calc(10px * var(--ui)); letter-spacing: .04em; color: var(--ink2); line-height: 1.5; }
+.mv .tag.pre { border-color: var(--under); color: var(--under); }
+.mv .tag.cD { border-color: var(--dem-lead); color: var(--dem); }
+.mv .tag.cR { border-color: var(--rep-lead); color: var(--rep); }
+.mv .mv-foot { display: flex; align-items: center; gap: 12px; margin-top: 8px; color: var(--ink3); font-size: calc(11px * var(--ui)); }
+.mv .mv-empty { color: var(--ink3); padding: 18px 8px; text-align: left; }

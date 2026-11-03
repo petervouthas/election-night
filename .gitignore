@@ -1,0 +1,5 @@
+# runtime state: fetched data, snapshots, player entries (tokens + home zips)
+cache/
+server.log
+.DS_Store
+node_modules/

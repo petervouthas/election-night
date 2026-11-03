@@ -1,0 +1,48 @@
+/* race-detail modal (modal.js) — scoped under #rmodal */
+#rmodal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; background: rgba(3, 5, 8, .72); font: 12px/1.35 var(--mono); color: var(--ink); }
+#rmodal.open { display: flex; }
+#rmodal .rm-box { width: 900px; max-width: calc(100vw - 24px); max-height: 90vh; overflow: auto; background: var(--panel); border: 1px solid var(--line2); box-shadow: 0 12px 48px rgba(0, 0, 0, .6); display: flex; flex-direction: column; }
+#rmodal .rm-hdr { position: sticky; top: 0; z-index: 2; display: flex; align-items: baseline; gap: 14px; padding: 8px 12px; background: var(--panel2); border-bottom: 1px solid var(--line2); flex-wrap: wrap; }
+#rmodal .rm-id { font-size: calc(26px * var(--ui)); line-height: 1; font-weight: 500; letter-spacing: -.01em; color: var(--ink); }
+#rmodal .rm-sub { color: var(--ink2); }
+#rmodal .rm-meta { display: flex; gap: 12px; color: var(--ink3); flex-wrap: wrap; }
+#rmodal .rm-meta b { color: var(--ink2); font-weight: 500; }
+#rmodal .rm-sp { flex: 1; }
+#rmodal .rm-badge { padding: 1px 7px; border: 1px solid var(--line2); color: var(--ink2); letter-spacing: .06em; white-space: nowrap; }
+#rmodal .rm-badge.cD { background: var(--dem); border-color: var(--dem); color: #fff; }
+#rmodal .rm-badge.cR { background: var(--rep); border-color: var(--rep); color: #fff; }
+#rmodal .rm-badge.cO { background: var(--oth); border-color: var(--oth); color: #fff; }
+#rmodal .rm-badge.lD { color: var(--dem); border-color: var(--dem-lead); }
+#rmodal .rm-badge.lR { color: var(--rep); border-color: var(--rep-lead); }
+#rmodal .rm-x { font-size: calc(16px * var(--ui)); line-height: 1; padding: 2px 8px; align-self: center; }
+#rmodal .rm-body { display: grid; grid-template-columns: 240px 1fr; min-height: 0; }
+#rmodal .rm-left { border-right: 1px solid var(--line); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+#rmodal .rm-right { padding: 6px 12px 12px; min-width: 0; }
+#rmodal .rm-map svg { display: block; width: 220px; height: 170px; background: var(--bg); border: 1px solid var(--line); }
+#rmodal .rm-map .st { fill: var(--panel2); stroke: var(--ink3); stroke-width: .6; }
+#rmodal .rm-map .st.solo { stroke: var(--ink2); stroke-width: 1; }
+#rmodal .rm-map .ds { stroke: var(--ink); stroke-width: 1; }
+#rmodal .rm-map .box { fill: none; stroke: var(--under); stroke-width: 1; }
+#rmodal .rm-cap { color: var(--ink3); font-size: calc(10px * var(--ui)); margin-top: 2px; letter-spacing: .04em; }
+#rmodal .rm-wiki { color: var(--ink2); font-size: calc(11px * var(--ui)); line-height: 1.45; }
+#rmodal .rm-links { display: flex; gap: 12px; }
+#rmodal .rm-links a { color: var(--ink2); border-bottom: 1px dotted var(--ink3); }
+#rmodal .rm-links a:hover { color: var(--ink); }
+#rmodal h4 { margin: 10px 0 3px; font-size: calc(11px * var(--ui)); font-weight: 500; color: var(--ink2); letter-spacing: .08em; border-bottom: 1px solid var(--line); padding-bottom: 2px; display: flex; gap: 10px; }
+#rmodal h4 small { color: var(--ink3); font-weight: 400; letter-spacing: 0; }
+#rmodal table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+#rmodal th { color: var(--ink3); font-weight: 400; text-align: right; padding: 1px 6px; white-space: nowrap; }
+#rmodal td { text-align: right; padding: 1px 6px; border-top: 1px solid var(--line); white-space: nowrap; }
+#rmodal th:first-child, #rmodal td:first-child { text-align: left; padding-left: 0; }
+#rmodal td.nm { white-space: normal; }
+#rmodal tr.win td { background: rgba(43, 213, 118, .06); }
+#rmodal .kv { display: grid; grid-template-columns: repeat(4, auto 1fr); column-gap: 10px; row-gap: 2px; font-variant-numeric: tabular-nums; }
+#rmodal .kv .k { color: var(--ink3); white-space: nowrap; }
+#rmodal .kv .v { color: var(--ink); text-align: right; white-space: nowrap; padding-right: 8px; }
+#rmodal .rm-scroll { max-height: 180px; overflow: auto; }
+#rmodal .muted { color: var(--ink3); }
+@media (max-width: 720px) {
+  #rmodal .rm-body { grid-template-columns: 1fr; }
+  #rmodal .rm-left { border-right: 0; border-bottom: 1px solid var(--line); }
+  #rmodal .kv { grid-template-columns: repeat(2, auto 1fr); }
+}
